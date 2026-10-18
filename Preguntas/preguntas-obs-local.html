@@ -150,6 +150,16 @@ body.g .guia{display:block}
   box-shadow:0 0 7px rgba(255,45,45,.7),0 0 18px rgba(255,45,45,.45),0 0 38px rgba(255,45,45,.3),inset 0 0 10px rgba(255,45,45,.2) !important;
   text-shadow:0 0 6px rgba(255,150,150,.85),0 0 16px rgba(255,45,45,.65),0 0 32px rgba(255,0,0,.45) !important;animation:timerNeon 1.1s ease-in-out infinite !important}
 @keyframes timerNeon{0%,100%{filter:brightness(1.15)}50%{filter:brightness(.92)}}
+/* ---------- llamada en curso: mismo estilo #tit, color amarillo + titileo ---------- */
+#tit.llamada{color:#fde047 !important;animation:llama 1.1s ease-in-out infinite !important;text-shadow:0 0 2px #fff,0 0 7px rgba(255,255,255,.95),0 0 16px #fde047,0 0 34px #fde047 !important}
+#tit.llamada::before{color:#fde047 !important;animation:none !important;filter:blur(16px) !important}
+#tit.llamada::after{color:#fde047 !important;animation:none !important;filter:blur(34px) !important}
+@keyframes llama{0%,100%{opacity:1}50%{opacity:.55}}
+/* aviso visual de llamada en curso */
+#ll-aviso{position:absolute;left:50%;top:116px;transform:translateX(-50%);display:none;align-items:center;justify-content:center;gap:14px;padding:10px 28px;border-radius:60px;background:#000;border:4px solid #fde047;box-shadow:0 0 20px #fde047,0 0 44px rgba(253,224,71,.6);z-index:6}
+#ll-aviso.on{display:flex;animation:llama 1.1s ease-in-out infinite}
+#ll-aviso .l{font:900 30px 'Segoe UI Black','Arial Black',Impact,sans-serif;color:#fff;text-shadow:0 0 8px #fde047,0 0 20px rgba(253,224,71,.6)}
+#ll-aviso .e{font:800 26px 'Segoe UI',Arial,sans-serif;color:#fff;text-shadow:0 0 6px currentColor}
 </style></head><body>
 <div id="root" class="off">
   <div class="guia" id="g1"></div><div class="guia" id="g2"></div><div class="guia" id="g3"></div>
@@ -177,6 +187,7 @@ body.g .guia{display:block}
     </div>
   </div>
   <div id="cartelw" class="abs"><div id="cartel"><div id="c1"></div><div id="c2"></div></div></div>
+  <div id="ll-aviso"><div class="l">LLAMADA A UN AMIGO</div><div class="e" id="ll-eq">CHICOS</div></div>
 </div>
 <script>
 const B='http://127.0.0.1:8769';
@@ -268,6 +279,9 @@ function pintar(s){
   const f=s.fase,ini=f==='inicio',tv=(s.titulo_visible!==undefined?!!s.titulo_visible:!!(s.titulo&&s.titulo.trim()));
   const mostrar=!ini||(tv&&!!s.titulo);                // titulo vacio: no se muestra nada
   setCls(pan,'off',!mostrar);setCls(pan,'inicio',ini);setCls(pan,'jugando',!ini);
+  // llamada en curso: titulo titilea en amarillo y aviso visual
+  const ll=!!(s&&s.llamada);setCls(tit,'llamada',ll);setCls($('ll-aviso'),'on',ll);
+  if(ll){const eq=s.llamada_eq||'chicos';$('ll-eq').textContent=eq==='chicos'?'CHICOS':'CHICAS';$('ll-eq').style.color=eq==='chicos'?'#1E5BFF':'#ff2bb0';$('ll-aviso').style.setProperty('--tc',eq==='chicos'?'#1E5BFF':'#ff2bb0');}
   const txt=ini?(s.titulo||''):(s.preg?s.preg.texto:''),key=(ini?'T':'Q'+s.qid)+'|'+txt+'|'+(s.cal&&s.cal.pan_h);
   if(key!==txtKey){const nuevoQ=txtKey.split('|')[0]!==key.split('|')[0];txtKey=key;tit.textContent=txt;tit.setAttribute('data-t',txt);
     if(ini)fit(tit,tw,150,40);else fit(tit,tw,58,26);

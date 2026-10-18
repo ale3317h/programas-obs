@@ -1005,7 +1005,7 @@ class Motor:
                   "turno": self.turno, "puntos": dict(self.puntos),
                   "usados": {e: dict(v) for e, v in self.usados.items()}, "aviso": dict(self.aviso),
                   "timer": {"total": tt, "restante": int(math.ceil(rms / 1000.0 - 1e-9)), "total_ms": tt * 1000, "restante_ms": rms,
-                            "t_ms": int(time.time() * 1000), "corriendo": self.corriendo(), "etiqueta": self.r_etiqueta, "llamada": bool(self.llamada), "activo": not sin},
+                            "t_ms": int(time.time() * 1000), "corriendo": self.corriendo(), "etiqueta": self.r_etiqueta, "llamada": bool(self.llamada), "llamada_eq": self.llamada["eq"] if self.llamada else None, "activo": not sin},
                   "tic_desde": TIC_DESDE, "cal": dict(self.cal), "vol": {n: {"pc": v["pc"], "obs": v["obs"]} for n, v in self.vol.items()}}
             for n, v in self.pulso.items(): st["p_" + n] = v
             return st
