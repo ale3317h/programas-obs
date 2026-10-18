@@ -24,9 +24,9 @@ body.g .guia{display:block}
 .cm img{position:absolute;inset:0;width:100%;height:100%;display:block;transition:opacity .35s}
 .cm .on{animation:resp 2.8s ease-in-out infinite;animation-delay:var(--d,0s)}
 .cm .off{opacity:0}
-.cm.used .on{opacity:0;animation:none}
-.cm.used .off{opacity:1}
-.cm.noval{opacity:.28;filter:grayscale(.85)}
+.cm.used .on{opacity:.62;filter:grayscale(.85) brightness(.92);animation:none}
+.cm.used .off{opacity:0}
+.cm.noval{opacity:.3;filter:grayscale(1) brightness(.72)}
 .cm .fb{position:absolute;inset:6%;border-radius:50%;display:none;align-items:center;justify-content:center;background:#000;border:5px solid var(--tc);color:#fff;
   font:900 54px 'Segoe UI Black',Arial,sans-serif;text-shadow:0 0 6px #fff,0 0 18px var(--tc),0 0 34px var(--tc);box-shadow:0 0 18px var(--tc),inset 0 0 18px var(--tc);animation:resp 2.8s ease-in-out infinite;animation-delay:var(--d,0s)}
 .cm.fallback .fb{display:flex}.cm.fallback img{display:none}
