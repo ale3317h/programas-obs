@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ruleta 2026 - Fuente local OBS (sin wifi)</title>
+<!--
+  PARA OBS (sin wifi / sin internet):
+  1) Dejá corriendo ruleta_control.py (usa 127.0.0.1 = interno de la PC, no usa wifi)
+  2) En OBS: Fuentes + > Navegador > marcar "Archivo local" > elegir ESTE archivo
+     (OTRA fuente distinta de la del reloj)
+     Alternativa: URL  http://127.0.0.1:8766/overlay  (sirve este mismo archivo)
+  3) Ancho 1920  Alto 1080. Fondo transparente automático.
+  4) Marcá "Controlar audio mediante OBS" si querés el sonido de la ruleta en el mezclador.
+
+  CÓMO ESTÁ ARMADO (para no romperlo al editar):
+  - El audio (SONIDOS JUNTOS.mp3) es el RELOJ MAESTRO. T = segundos desde que arranca el mp3.
+  - Todo lo visual es una función de T: no hay timers sueltos que se desfasen.
+  - Línea de tiempo del mp3 (medida): tics parejos (13/s) de 0.16s a 6.33s, corte en seco,
+    pitido inicial en 6.09s (trino de ~0.3s), silencio hasta 7.15s, y los pitidos seguidos desde
+    7.168s cada 0.17s hasta 8.4s. La rueda va a tope hasta ~5.3s, frena fuerte y queda QUIETA en
+    6.10s: ahí se selecciona el sector y el neón destella UNA vez. Después se apaga y titila con
+    cada pitido seguido (tabla HITS). Las letras van en una capa propia por ENCIMA del neón.
+  - Python manda ruleta_t0 (hora de inicio del mp3). Misma PC = mismo reloj.
+-->
+<style>
+  html,body{margin:0;padding:0;background:transparent !important;width:1920px;height:1080px;overflow:hidden;
+    font-family:"Bahnschrift","Bahnschrift SemiBold","Segoe UI Black","Arial Black","Segoe UI",Arial,sans-serif;}
+  #stage{position:absolute;left:0;top:0;width:1920px;height:1080px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:26px;transition:opacity .35s;}
+  #stage.oculta{opacity:0;pointer-events:none;}
+
+  /* ---------- rueda ---------- */
+  #rueda{position:relative;width:700px;height:700px;border-radius:50%;
+    box-shadow:0 0 60px rgba(255,50,25,.16),0 26px 70px rgba(0,0,0,.75);}
+  #rueda>*{position:absolute;left:0;top:0;width:700px;height:700px;}
+  .capa{will-change:transform;transform:rotate(0deg);}
+  #g1,#g2{opacity:0;}
+  svg{display:block;overflow:visible;}
+
+  /* ---------- borde: aro fino de neon rojo + naranja que gira sin parar ----------
+     Degradado continuo (sin cortes) que da la vuelta; el resplandor "respira" suave.
+     Solo se animan transform/opacity (GPU): nada de blur ni filtros que trabarian OBS. */
+  #rueda>#halo{left:-50px;top:-50px;width:800px;height:800px;
+    -webkit-mask:radial-gradient(circle at 50% 50%,transparent 338px,rgba(0,0,0,.95) 350px,rgba(0,0,0,.55) 362px,rgba(0,0,0,.2) 380px,transparent 400px);
+            mask:radial-gradient(circle at 50% 50%,transparent 338px,rgba(0,0,0,.95) 350px,rgba(0,0,0,.55) 362px,rgba(0,0,0,.2) 380px,transparent 400px);}
+  #aro{-webkit-mask:radial-gradient(circle at 50% 50%,transparent 333px,#000 334.5px,#000 349px,transparent 350.5px);
+               mask:radial-gradient(circle at 50% 50%,transparent 333px,#000 334.5px,#000 349px,transparent 350.5px);}
+  #aro2{-webkit-mask:radial-gradient(circle at 50% 50%,transparent 340.6px,#000 341.4px,#000 343px,transparent 343.8px);
+                mask:radial-gradient(circle at 50% 50%,transparent 340.6px,#000 341.4px,#000 343px,transparent 343.8px);}
+  .spin{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:50%;will-change:transform;
+    animation:giraAro 6s linear infinite;
+    background:repeating-conic-gradient(from 0deg,#ff2a2a 0deg,#ff4a26 38deg,#ff7a2f 82deg,#ffb061 110deg,#ff7a2f 138deg,#ff3a28 168deg,#ff2a2a 180deg);}
+  #halo .spin{animation:giraAro 6s linear infinite,respira 3.2s ease-in-out infinite;}
+  #aro2 .spin{opacity:.7;
+    background:repeating-conic-gradient(from 0deg,#ff8a6a 0deg,#ffb48a 60deg,#ffe7b8 110deg,#ffb48a 160deg,#ff8a6a 180deg);}
+  @keyframes giraAro{to{transform:rotate(360deg);}}
+  @keyframes respira{0%,100%{opacity:.6;}50%{opacity:.95;}}
+
+  /* letras: capa propia ENCIMA del resaltado de neon (siempre legibles) */
+  #txt .tx{transition:none;}
+  #stage.win #txt .tx{opacity:.4;}
+  #stage.win #txt .tx.w{opacity:1;}
+
+  /* resaltado del sector ganador (capa fija sobre la rueda ya frenada) */
+  #hi{opacity:0;}
+  #hi .dim{opacity:0;transition:opacity .05s;}
+  #hi .gana{opacity:0;}
+  #stage.win #hi{opacity:1;}
+  #stage.win #hi .dim{opacity:1;}
+  #stage.win #hi .gana{opacity:.85;}
+
+  /* ---------- cartel ---------- */
+  #cartel{position:relative;min-width:300px;max-width:1100px;box-sizing:border-box;text-align:center;white-space:nowrap;
+    font-size:68px;line-height:1.1;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:linear-gradient(#0d0d0f,#000);
+    border:5px solid var(--c,#ff2a2a);border-radius:28px;padding:14px 56px;
+    text-shadow:0 0 12px var(--c1,rgba(255,42,42,.9)),0 0 40px var(--c2,rgba(255,42,42,.55));
+    box-shadow:0 0 22px var(--c1,rgba(255,42,42,.8)),0 0 70px var(--c2,rgba(255,42,42,.4)),inset 0 0 22px var(--c3,rgba(255,42,42,.25));
+    opacity:0;transform:scale(.6) translateY(24px);overflow:hidden;}
+  #cartel.show{opacity:1;animation:entra .4s cubic-bezier(.2,1.5,.4,1) forwards;}
+  #cartel::after{content:'';position:absolute;top:-20%;bottom:-20%;left:-90px;width:60px;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-18deg);}
+  #cartel.show::after{animation:brillo 1.1s ease-in-out .35s 2;}
+  @keyframes entra{0%{transform:scale(.6) translateY(24px);}100%{transform:scale(1) translateY(0);}}
+  @keyframes brillo{0%{left:-90px;}100%{left:115%;}}
+  /* ---------- titulo superior (editable desde Python): el marco se ajusta solo al texto ---------- */
+  #rueda>#titulo{left:-610px;top:auto;bottom:100%;width:1920px;height:auto;margin-bottom:22px;
+    display:none;justify-content:center;pointer-events:none;}
+  .tit{position:relative;box-sizing:border-box;white-space:nowrap;text-align:center;opacity:0;
+    font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;font-size:48px;line-height:1;
+    border:3px solid #ff5a2a;border-radius:18px;background:linear-gradient(180deg,#1d0b0d,#070203);
+    box-shadow:0 0 14px rgba(255,90,42,.8),0 0 44px rgba(255,59,31,.42),inset 0 0 16px rgba(255,90,42,.22);}
+  .tit.show{opacity:1;animation:titIn .55s cubic-bezier(.2,1.2,.4,1) both;}
+  @keyframes titIn{0%{opacity:0;transform:translateY(-16px) scale(.96);}100%{opacity:1;transform:none;}}
+  .titIn{position:relative;overflow:hidden;border-radius:15px;padding:14px 40px;}
+  .titIn::after{content:'';position:absolute;top:-20%;bottom:-20%;left:-90px;width:60px;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.42),transparent);transform:skewX(-18deg);}
+  .tit.show .titIn::after{animation:brillo 1.1s ease-in-out .4s 1;}
+  /* lineas de neon a los costados: look de rotulo de transmision */
+  .tit::before,.tit::after{content:'';position:absolute;top:50%;width:90px;height:3px;margin-top:-1.5px;border-radius:2px;
+    box-shadow:0 0 10px rgba(255,90,42,.9);}
+  .tit::before{right:100%;margin-right:14px;background:linear-gradient(90deg,transparent,#ff5a2a);}
+  .tit::after{left:100%;margin-left:14px;background:linear-gradient(270deg,transparent,#ff5a2a);}
+  #conf{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;}
+</style>
+</head>
+<body>
+<div id="stage" class="oculta">
+  <div id="rueda">
+    <div id="halo"><div class="spin"></div></div>
+    <svg id="bisel" viewBox="0 0 700 700" width="700" height="700"></svg>
+    <div id="aro"><div class="spin"></div></div>
+    <div id="aro2"><div class="spin"></div></div>
+    <svg id="bisel2" viewBox="0 0 700 700" width="700" height="700"></svg>
+    <div id="g2" class="capa"></div>
+    <div id="g1" class="capa"></div>
+    <div id="giro" class="capa"></div>
+    <svg id="hi" viewBox="0 0 700 700" width="700" height="700"></svg>
+    <svg id="brillo" viewBox="0 0 700 700" width="700" height="700"></svg>
+    <div id="txt" class="capa"></div>
+    <svg id="aguja" viewBox="0 0 700 700" width="700" height="700" style="overflow:visible"></svg>
+    <div id="titulo"><div id="titBox" class="tit"><div id="titIn" class="titIn"><span id="tituloTxt"></span></div></div></div>
+  </div>
+  <div id="cartel">—</div>
+  <canvas id="conf" width="1920" height="1080"></canvas>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIG
+   ===================================================================== */
+const URLS=['http://127.0.0.1:8766/state','http://localhost:8766/state'];
+const URL_SND='http://127.0.0.1:8766/sonido/ruleta';
+const FONT='"Bahnschrift","Bahnschrift SemiBold","Segoe UI Black","Arial Black","Segoe UI",Arial,sans-serif';
+const LS=0.06;   // espaciado entre letras (en em): da el look de rotulo profesional
+const NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+const mod=(a,n)=>((a%n)+n)%n;
+
+// Geometria (px, caja de 700x700, centro 350,350)
+const G0={cx:350,cy:350,face:306,rim:333,peg:319,rin:34,rout:262,hub:0};
+
+// Linea de tiempo en segundos del mp3 (T=0 = arranca el audio). MEDIDO del mp3:
+//   tics PAREJOS cada 75 ms (13/s) desde 0.16 s hasta 6.33 s, corte en seco, silencio, 1er "TAN" en 7.168 s.
+//   Como el sonido no baja de ritmo, la rueda va a tope y FRENA FUERTE justo cuando el sonido corta.
+//  amague hacia atras  : tw0 -> tw1
+//  lanzamiento (rampa) : tw1 -> tp
+//  crucero (fric. leve): tp  -> tb   (velocidad baja a K*w0)
+//  frenado fuerte      : tb  -> tend (la rueda queda QUIETA justo en el pitido inicial, 6.09 s)
+//  SELECCION           : TSEL (pitido inicial 6.09 s: se marca el sector y destella UNA vez)
+//  fanfarria           : TWIN (pitidos seguidos desde 7.168 s: destellan con cada uno)
+const TL={tw0:-0.30,tw1:0.05,tp:0.70,tb:5.30,tend:6.10,TSEL:6.07,TWIN:7.15,TFIN:9.6,W:14,P:2.2,K:0.82};
+
+// Golpes del "TAN" final, MEDIDOS del mp3: [segundo en que arranca, fuerza 0..1].
+// Rafaga inicial (7.17 / 7.22 / 7.35) y despues un golpe cada 0.17 s que se va apagando.
+// El neon, las luces y el cartel destellan en estos instantes exactos (nada de periodos inventados).
+const HITS=[[6.09,1,0.15],[7.168,1],[7.225,.9],[7.345,1],[7.53,.78],[7.70,.64],[7.87,.52],[8.045,.42],[8.205,.34],[8.385,.28]];
+// [segundo, fuerza, (decaimiento en s)]. El primero es el pitido inicial: destella UNA vez y se apaga.
+const PULSE={tau:0.09,floorA:0.22,floorB:0.5,tB:7.14,fin:0.85,tEnd:8.45,lag:0.02};   // lag: adelanta el destello para compensar el cuadro
+function nivel(T){
+  let p=0;
+  for(let i=0;i<HITS.length;i++){
+    const h=HITS[i],d=T-(h[0]-PULSE.lag);
+    if(d>=0){const v=h[1]*Math.exp(-d/(h[2]||PULSE.tau));if(v>p)p=v;}
+  }
+  let fl=T<PULSE.tB?PULSE.floorA:PULSE.floorB;     // entre el pitido y la fanfarria el neon queda bajo (apagado)
+  if(T>PULSE.tEnd)fl+=(PULSE.fin-PULSE.floorB)*Math.min(1,(T-PULSE.tEnd)/0.6);
+  return{L:fl+(1-fl)*p,P:p};
+}
+function aplicarPulso(T){
+  const n=nivel(T);
+  if(anim.gana)anim.gana.style.opacity=n.L.toFixed(3);
+  $('cartel').style.filter=n.P>0.02?'brightness('+(1+0.55*n.P).toFixed(3)+')':'';
+}
+
+// Aguja flexible (flapper)
+const FL={C:4.5,DM:17,K:1100,CD:16,H:1/480};
+
+/* =====================================================================
+   ESTADO
+   ===================================================================== */
+let items=[],G={n:0,span:0,gap:0};
+let lastItemsJSON='',lastGiro=null,lastStop=null,lastProbar=null,confTok=0;
+let rest=0;                       // angulo de reposo actual de la rueda
+let plan=null,anim=null;          // anim: {t0,sync,fx,fv,lastSim,prevTh,won,raf}
+let timers=[];
+let sndOn=true;
+const au=new Audio(URL_SND);au.preload='auto';au.volume=1;
+
+/* =====================================================================
+   DIBUJO ESTATICO (bisel, luces, brillo, cubo, aguja)
+   ===================================================================== */
+function polar(r,a){const t=a*Math.PI/180;return[G0.cx+r*Math.sin(t),G0.cy-r*Math.cos(t)];}
+function wedge(a0,a1,r){
+  const[x0,y0]=polar(r,a0),[x1,y1]=polar(r,a1);
+  return 'M'+G0.cx+' '+G0.cy+'L'+x0.toFixed(2)+' '+y0.toFixed(2)+'A'+r+' '+r+' 0 '+((a1-a0)>180?1:0)+' 1 '+x1.toFixed(2)+' '+y1.toFixed(2)+'Z';
+}
+function dibujarFijo(){
+  // Base oscura detras del aro de neon (el aro que gira va encima: ver #aro / #aro2 en el CSS)
+  $('bisel').innerHTML='<circle cx="350" cy="350" r="350" fill="#0d0305"/>';
+  // Sombreado fijo del aro fino: bordes oscuros + reflejo suave (no tapa los colores)
+  $('bisel2').innerHTML='<defs><radialGradient id="gTubo" gradientUnits="userSpaceOnUse" cx="350" cy="350" r="350">'
+    +'<stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".9520" stop-color="#000" stop-opacity="0"/>'
+    +'<stop offset=".9543" stop-color="#000" stop-opacity=".45"/><stop offset=".9600" stop-color="#000" stop-opacity=".05"/>'
+    +'<stop offset=".9714" stop-color="#fff" stop-opacity=".14"/><stop offset=".9829" stop-color="#000" stop-opacity="0"/>'
+    +'<stop offset=".9971" stop-color="#000" stop-opacity=".3"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient></defs>'
+    +'<circle cx="350" cy="350" r="350" fill="url(#gTubo)"/>'
+    +'<circle cx="350" cy="350" r="333.6" fill="none" stroke="#000" stroke-opacity=".8" stroke-width="2.2"/>';
+
+  // Brillo fijo (no gira): solo un borde apenas oscurecido; los colores quedan limpios
+  $('brillo').innerHTML='<defs><radialGradient id="gVig" cx=".5" cy=".5" r=".5"><stop offset=".82" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></radialGradient></defs>'
+   +'<circle cx="350" cy="350" r="306" fill="url(#gVig)"/>';
+
+  // Aguja (flapper): punta en x=660 (dentro del aro de pegs), pivote en x=728
+  $('aguja').innerHTML='<defs>'
+   +'<linearGradient id="gAg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6b5e"/><stop offset=".5" stop-color="#e01616"/><stop offset="1" stop-color="#7d0707"/></linearGradient>'
+   +'</defs>'
+   +'<g id="agujaG" style="transform-origin:728px 350px;filter:drop-shadow(0 0 7px rgba(255,42,42,.95)) drop-shadow(0 4px 6px rgba(0,0,0,.8));">'
+   +'<path d="M668 350 L720 335 Q731 333 733 350 Q731 367 720 365 Z" fill="url(#gAg)" stroke="#0a0000" stroke-width="3" stroke-linejoin="round"/>'
+   +'<path d="M668 349 L716 339" stroke="#ffd9d2" stroke-width="2.2" stroke-linecap="round" opacity=".75" fill="none"/>'
+   +'</g>'
+   +'<circle cx="728" cy="350" r="13" fill="#1a0707" stroke="#e9c46a" stroke-width="3.5"/>'
+   +'<circle cx="728" cy="350" r="4.5" fill="#e9c46a"/>';
+}
+
+/* =====================================================================
+   RUEDA (sectores, pegs, textos) -> SVG que gira por transform
+   ===================================================================== */
+const mc=document.createElement('canvas').getContext('2d');
+function medir(t,fs){mc.font='700 '+fs+'px '+FONT;return mc.measureText(t).width+t.length*fs*LS;}
+function lum(h){
+  const f=v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);};
+  return 0.2126*f(parseInt(h.substr(1,2),16))+0.7152*f(parseInt(h.substr(3,2),16))+0.0722*f(parseInt(h.substr(5,2),16));
+}
+function fgPara(h){try{return lum(h)>0.2?'#111111':'#ffffff';}catch(e){return'#ffffff';}}
+// color de neon: version viva y clara del color del sector (los oscuros brillan en blanco)
+function neon(h){
+  try{
+    let r=parseInt(h.substr(1,2),16)/255,g=parseInt(h.substr(3,2),16)/255,b=parseInt(h.substr(5,2),16)/255;
+    const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let l=(mx+mn)/2,sa=d===0?0:d/(1-Math.abs(2*l-1)),hu=0;
+    if(sa<0.12)return l<0.5?'#f2f2f2':'#ffffff';
+    if(d){if(mx===r)hu=((g-b)/d)%6;else if(mx===g)hu=(b-r)/d+2;else hu=(r-g)/d+4;hu*=60;if(hu<0)hu+=360;}
+    if(l<0.85){sa=Math.max(sa,0.9);l=Math.max(l,0.58);}
+    const c=(1-Math.abs(2*l-1))*sa,x=c*(1-Math.abs((hu/60)%2-1)),m=l-c/2;
+    let q=hu<60?[c,x,0]:hu<120?[x,c,0]:hu<180?[0,c,x]:hu<240?[0,x,c]:hu<300?[x,0,c]:[c,0,x];
+    return'#'+q.map(v=>Math.round((v+m)*255).toString(16).padStart(2,'0')).join('');
+  }catch(e){return h;}
+}
+function hexA(h,a){
+  try{return'rgba('+parseInt(h.substr(1,2),16)+','+parseInt(h.substr(3,2),16)+','+parseInt(h.substr(5,2),16)+','+a+')';}
+  catch(e){return'rgba(255,255,255,'+a+')';}
+}
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+// Mejor tamaño de letra para un sector: 1 o 2 renglones, a lo largo del radio.
+function ajustarTexto(txt,span){
+  txt=String(txt).toUpperCase();
+  const L=G0.rout-G0.rin,half=Math.min(span,160)/2*Math.PI/180,tan=Math.tan(half);
+  function probar(lineas){
+    let mejor=0;
+    for(let fs=50;fs>=11;fs--){
+      let w=0;lineas.forEach(l=>{w=Math.max(w,medir(l,fs));});
+      if(w>L)continue;
+      const rIni=Math.max(G0.rin,G0.rout-w);
+      const H=2*rIni*tan*0.9;
+      if(lineas.length*fs*1.05<=H){mejor=fs;break;}
+    }
+    return mejor;
+  }
+  const un=probar([txt]);let res={fs:un,lineas:[txt]};
+  if(txt.indexOf(' ')>0){
+    const pal=txt.split(' ');let bestSplit=null,bestDiff=1e9;
+    for(let i=1;i<pal.length;i++){
+      const a=pal.slice(0,i).join(' '),b=pal.slice(i).join(' '),d=Math.abs(a.length-b.length);
+      if(d<bestDiff){bestDiff=d;bestSplit=[a,b];}
+    }
+    const dos=probar(bestSplit);
+    if(dos>un*1.18||un===0){res={fs:dos,lineas:bestSplit};}
+  }
+  if(!res.fs)res.fs=11;
+  return res;
+}
+
+function buildWheel(its){
+  items=its;const n=its.length,span=360/n,gap=span;   // 1 gancho por borde de sector, nada mas
+  G={n,span,gap};
+  let s='<svg viewBox="0 0 700 700" width="700" height="700" xmlns="'+NS+'">'
+   +'<circle cx="350" cy="350" r="'+G0.rim+'" fill="#0a0707"/>';
+  its.forEach((it,i)=>{
+    s+='<path d="'+wedge(i*span,(i+1)*span,G0.face)+'" fill="'+it[1]+'" stroke="'+it[1]+'" stroke-width="1"/>';
+  });
+  // separadores
+  for(let k=0;k<n;k++){
+    const[x0,y0]=polar(G0.hub,k*span),[x1,y1]=polar(G0.face,k*span);
+    s+='<line x1="'+x0.toFixed(1)+'" y1="'+y0.toFixed(1)+'" x2="'+x1.toFixed(1)+'" y2="'+y1.toFixed(1)+'" stroke="#080606" stroke-width="4.5"/>';
+  }
+  // ganchos dorados: exactamente uno en cada borde entre sectores (cada sector queda con 2)
+  for(let k=0;k<n;k++){
+    const[x,y]=polar(G0.peg,k*span);
+    s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="6.2" fill="#e9c46a" stroke="#4a2f00" stroke-width="1.6"/>'
+      +'<circle cx="'+(x-1.5).toFixed(1)+'" cy="'+(y-1.7).toFixed(1)+'" r="1.9" fill="#fff8dc"/>';
+  }
+  const sS=s+'</svg>';                       // rueda sin letras (va DEBAJO del neon)
+  // textos radiales: se leen horizontales cuando el sector esta bajo la aguja
+  let tx='';
+  its.forEach((it,i)=>{
+    const c=i*span+span/2,f=ajustarTexto(it[0],span),claro=fgPara(it[1])==='#ffffff';
+    const lh=f.fs*1.05,y0=-(f.lineas.length-1)*lh/2,ls=f.fs*LS;
+    let t='<g class="tx" data-i="'+i+'" transform="translate(350 350) rotate('+(c-90)+')" font-family=\''+FONT.replace(/"/g,"&quot;")+'\' font-weight="700" font-size="'+f.fs+'" letter-spacing="'+ls.toFixed(2)+'" text-anchor="end">';
+    f.lineas.forEach((l,j)=>{
+      const y=y0+j*lh;
+      t+='<text x="'+(G0.rout+ls).toFixed(1)+'" y="'+y.toFixed(1)+'" dominant-baseline="central" fill="'+(claro?'#ffffff':'#111111')+'">'+esc(l)+'</text>';
+    });
+    tx+=t+'</g>';
+  });
+  const sT='<svg viewBox="0 0 700 700" width="700" height="700" xmlns="'+NS+'">'+tx+'</svg>';
+  $('giro').innerHTML=sS;$('txt').innerHTML=sT;
+  $('g1').innerHTML=s+tx+'</svg>';$('g2').innerHTML=s+tx+'</svg>';   // estelas: rueda completa
+  setRot(rest);
+}
+function setRot(a){
+  const t='rotate('+a.toFixed(3)+'deg)';$('giro').style.transform=t;$('txt').style.transform=t;
+}
+function ghosts(a,w){
+  // desenfoque de movimiento barato: 2 copias rezagadas con opacidad segun velocidad
+  const k=Math.max(0,Math.min(1,(Math.abs(w)-140)/900));
+  if(k<=0.01){$('g1').style.opacity=0;$('g2').style.opacity=0;return;}
+  $('g1').style.opacity=(0.34*k).toFixed(3);$('g1').style.transform='rotate('+(a-w*0.0085).toFixed(3)+'deg)';
+  $('g2').style.opacity=(0.20*k).toFixed(3);$('g2').style.transform='rotate('+(a-w*0.0170).toFixed(3)+'deg)';
+}
+
+/* =====================================================================
+   FISICA: angulo en funcion de T (deterministico) + aguja con resorte
+   ===================================================================== */
+function makePlan(st,base){
+  const n=G.n,span=G.span,gap=G.gap;
+  const w=mod(st.ruleta_idx|0,n);
+  const r1=+st.ruleta_r1,r2=+st.ruleta_r2,r3=+st.ruleta_r3;
+  const k=Math.round(span/gap);
+  const j=Math.min(k-1,Math.floor((isNaN(r1)?.5:r1)*k));
+  const lo=Math.max(FL.C+1.2,span*0.14),hi=span*0.86,q=lo+(isNaN(r2)?.5:r2)*(hi-lo);   // frena dentro del sector, lejos de los ganchos
+  const pf=w*span+j*gap+q;                  // angulo (marco de la rueda) bajo la aguja al final
+  const thf=mod(90-pf,360);                 // rotacion final (mod 360); la aguja esta a 90deg
+  const resto=mod(thf-base,360);
+  const revs=20+Math.floor((isNaN(r3)?.5:r3)*2);
+  const Th=revs*360+resto;
+  const Tr=TL.tp-TL.tw1,Lc=TL.tb-TL.tp,D=TL.tend-TL.tb,K=TL.K;
+  const w0=(Th+TL.W)/(Tr*0.5+Lc*0.5*(1+K)+K*D/(TL.P+1));   // velocidad pico (deg/s) para clavar el destino
+  const w1=K*w0;
+  return{base,w,w0,w1,Th,thf,Tr,Lc,D};
+}
+function ang(T,p){
+  if(T<=TL.tw0)return p.base;
+  if(T<TL.tw1){const v=(T-TL.tw0)/(TL.tw1-TL.tw0);return p.base-TL.W*v*v*(3-2*v);}
+  const a0=p.base-TL.W,aR=a0+p.w0*p.Tr*0.5;
+  if(T<TL.tp){const v=(T-TL.tw1)/p.Tr;return a0+p.w0*p.Tr*(v*v*v-v*v*v*v/2);}
+  const aC=aR+(p.w0+p.w1)*0.5*p.Lc;
+  if(T<TL.tb){const t=T-TL.tp;return aR+p.w0*t-(p.w0-p.w1)*t*t/(2*p.Lc);}
+  if(T<TL.tend){const u=(T-TL.tb)/p.D;return aC+p.w1*p.D*(1-Math.pow(1-u,TL.P+1))/(TL.P+1);}
+  return p.base+p.Th;
+}
+
+// Aguja: un peg que pasa la empuja (rampa) y al soltarla vuelve con resorte amortiguado.
+function pasoAguja(a,T){
+  const th=ang(T,plan),p=mod(90-th,360),q=p%G.gap,adelante=(a.prevTh===null)?true:(th>a.prevTh+1e-9);
+  a.prevTh=th;
+  if(adelante&&q<FL.C){
+    const xp=FL.DM*(1-q/FL.C);
+    if(a.fx<xp){a.fv=(xp-a.fx)/FL.H;a.fx=xp;return;}
+  }
+  const acc=-FL.K*a.fx-FL.CD*a.fv;
+  a.fv+=acc*FL.H;a.fx+=a.fv*FL.H;
+  if(a.fx>FL.DM+5){a.fx=FL.DM+5;a.fv=Math.min(a.fv,0);}
+  if(a.fx<-10){a.fx=-10;a.fv=Math.max(a.fv,0);}
+}
+function setAguja(x){$('agujaG').style.transform='rotate('+(-x).toFixed(2)+'deg)';}
+
+/* =====================================================================
+   RELOJ: T = segundos del mp3. Si el audio suena, se afina contra el.
+   ===================================================================== */
+function ahora(){return(performance.timeOrigin+performance.now())/1000;}
+function relojT(){return ahora()-anim.t0+anim.sync;}
+
+function arrancarAudio(t0,quiere){
+  try{au.pause();}catch(e){}
+  if(!quiere)return;
+  const espera=t0-ahora();
+  const lanzar=()=>{
+    try{
+      au.currentTime=Math.max(0,ahora()-t0);
+      const pr=au.play();if(pr&&pr.catch)pr.catch(()=>{});
+    }catch(e){}
+  };
+  if(espera>0.004){timers.push(setTimeout(lanzar,espera*1000));}else{lanzar();}
+}
+au.addEventListener('playing',()=>{
+  // afina: lo que se OYE manda. sync = (posicion real del audio) - (T por reloj de pared)
+  if(anim&&anim.audioTemp){
+    const dif=au.currentTime-(ahora()-anim.t0);
+    if(Math.abs(dif)<0.25)anim.sync=dif;
+    anim.audioTemp=false;
+  }
+});
+
+/* =====================================================================
+   SECUENCIA
+   ===================================================================== */
+function limpiarGiro(){
+  timers.forEach(clearTimeout);timers=[];confTok++;
+  if(anim&&anim.raf){cancelAnimationFrame(anim.raf);}
+  const st=$('stage');st.classList.remove('win','fin');
+  document.querySelectorAll('#txt .tx.w').forEach(e=>{e.classList.remove('w');});
+  $('cartel').style.filter='';
+  $('cartel').classList.remove('show');
+  $('hi').innerHTML='';
+  const cv=$('conf');cv.getContext('2d').clearRect(0,0,1920,1080);
+}
+
+// Cambiaron los sectores: se borra TODO rastro del giro anterior (resaltado, cartel, rotacion)
+function resetRueda(){
+  limpiarGiro();
+  plan=null;anim=null;              // se conserva la rotacion actual (rest): la rueda no salta al inicio
+  ghosts(0,0);setAguja(0);
+}
+
+function iniciarGiro(st){
+  limpiarGiro();
+  plan=makePlan(st,rest);
+  anim={t0:+st.ruleta_t0,sync:0,fx:0,fv:0,lastSim:null,prevTh:null,won:false,raf:0,audioTemp:true,color:st.ruleta_color||'#ff2a2a',txt:st.ruleta_txt||''};
+  prepararCartel(anim.txt,anim.color);
+  sndOn=st.ruleta_sonido_obs!==false;
+  arrancarAudio(anim.t0,sndOn);
+  anim.audioTemp=sndOn;
+  anim.raf=requestAnimationFrame(cuadro);
+}
+
+function cuadro(){
+  const T=relojT();
+  if(anim.lastSim===null)anim.lastSim=Math.max(TL.tw0,T-0.05);
+  if(T-anim.lastSim>0.25)anim.lastSim=T-0.25;
+  while(anim.lastSim+FL.H<=T){anim.lastSim+=FL.H;pasoAguja(anim,anim.lastSim);}
+  const a=ang(T,plan),w=(ang(T,plan)-ang(T-1/90,plan))*90;
+  setRot(a);ghosts(a,w);setAguja(anim.fx);
+  if(!anim.won&&T>=TL.TSEL)ganar();
+  if(anim.won&&!anim.conf&&T>=TL.TWIN){anim.conf=true;confeti();}   // confeti con la fanfarria
+  if(anim.won&&T<TL.TFIN)aplicarPulso(T);
+  if(T>=TL.TFIN){terminar();return;}
+  anim.raf=requestAnimationFrame(cuadro);
+}
+
+function prepararHighlight(){
+  const span=G.span,a0=plan.w*span+plan.thf,a1=a0+span,r=G0.face,W=wedge(a0,a1,r-1);
+  const hole='M'+(G0.cx-r)+' '+G0.cy+'A'+r+' '+r+' 0 1 0 '+(G0.cx+r)+' '+G0.cy+'A'+r+' '+r+' 0 1 0 '+(G0.cx-r)+' '+G0.cy+'Z';
+  const c=neon(anim?anim.color:'#ffffff');
+  $('hi').innerHTML='<defs>'
+    +'<filter id="fB" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="14"/></filter>'
+    +'<filter id="fM" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>'
+    +'<filter id="fS" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.2"/></filter>'
+    +'<clipPath id="cW"><path d="'+W+'"/></clipPath></defs>'
+    +'<path class="dim" fill-rule="evenodd" fill="rgba(2,0,0,.74)" d="'+hole+wedge(a0,a1,r)+'"/>'
+    +'<g class="gana">'
+      // halo exterior grande
+      +'<path d="'+W+'" fill="none" stroke="'+c+'" stroke-width="30" stroke-linejoin="round" filter="url(#fB)" opacity=".95"/>'
+      +'<path d="'+W+'" fill="none" stroke="'+c+'" stroke-width="14" stroke-linejoin="round" filter="url(#fM)"/>'
+      // luz interior que baña los bordes del sector (el centro queda limpio para leer)
+      +'<g clip-path="url(#cW)">'
+        +'<path d="'+W+'" fill="none" stroke="'+c+'" stroke-width="60" stroke-linejoin="round" filter="url(#fB)" opacity=".75"/>'
+        +'<path d="'+W+'" fill="none" stroke="#ffffff" stroke-width="20" stroke-linejoin="round" filter="url(#fM)" opacity=".7"/>'
+      +'</g>'
+      // tubo de neon: color + nucleo blanco
+      +'<path d="'+W+'" fill="none" stroke="'+c+'" stroke-width="8" stroke-linejoin="round" filter="url(#fS)"/>'
+      +'<path d="'+W+'" fill="none" stroke="'+c+'" stroke-width="6" stroke-linejoin="round"/>'
+      +'<path d="'+W+'" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linejoin="round"/>'
+    +'</g>';
+}
+function ganar(){
+  anim.won=true;
+  setRot(plan.base+plan.Th);setAguja(0);ghosts(0,0);
+  prepararHighlight();
+  anim.gana=$('hi').querySelector('.gana');
+  marcarTexto(plan.w);
+  aplicarPulso(Math.max(TL.TSEL,relojT()));     // primer cuadro ya con el pitido
+  void $('hi').getBoundingClientRect();
+  $('stage').classList.add('win');
+  const c=$('cartel');c.classList.remove('show');void c.offsetWidth;c.classList.add('show');
+}
+function marcarTexto(i){
+  const e=$('txt').querySelector('.tx[data-i="'+i+'"]');
+  if(e)e.classList.add('w');
+}
+function terminar(){
+  rest=mod(plan.base+plan.Th,360);
+  setRot(rest);ghosts(0,0);setAguja(0);
+  if(anim.gana)anim.gana.style.opacity=PULSE.fin;
+  $('cartel').style.filter='';
+  $('stage').classList.add('fin');
+  anim.raf=0;
+}
+
+// Estado de reposo (OBS recargado despues de un giro): sin animar
+function restaurar(st){
+  // Solo si el ultimo resultado todavia corresponde a los sectores actuales
+  if(!(st.ruleta_idx>=0&&items[st.ruleta_idx]&&items[st.ruleta_idx][0]===st.ruleta_txt))return;
+  plan=makePlan(st,0);rest=mod(plan.thf,360);
+  anim={t0:+st.ruleta_t0,sync:0,fx:0,fv:0,lastSim:null,prevTh:null,won:true,raf:0,color:st.ruleta_color||'#ff2a2a',txt:st.ruleta_txt||''};
+  setRot(rest);setAguja(0);
+  prepararCartel(anim.txt,anim.color);
+  prepararHighlight();
+  marcarTexto(plan.w);
+  $('stage').classList.add('win','fin');
+  $('cartel').classList.add('show');
+}
+
+/* =====================================================================
+   CARTEL + CONFETI
+   ===================================================================== */
+// Centrado OPTICO vertical: las mayusculas no tienen descendentes, asi que sin esto quedan altas.
+// Mide el glifo real con canvas y devuelve cuantos px hay que BAJAR el texto (lh = line-height).
+function centrarV(txt,fs,lh){
+  try{
+    mc.font='700 '+fs+'px '+FONT;
+    const m=mc.measureText('H'),fa=m.fontBoundingBoxAscent,fd=m.fontBoundingBoxDescent;   // 'H' = altura de mayuscula, fija (las tildes no corren el centrado)
+    if(!(fa>0))return fs*0.065;
+    const L=fs*lh,base=(L-(fa+fd))/2+fa,centro=base-(m.actualBoundingBoxAscent-m.actualBoundingBoxDescent)/2;
+    return L/2-centro;
+  }catch(e){return fs*0.065;}
+}
+let lastTitulo=null;
+function ponerTitulo(t){
+  const box=$('titulo'),tit=$('titBox'),tin=$('titIn');
+  t=String(t||'').trim();
+  if(!t){box.style.display='none';tit.classList.remove('show');return;}
+  box.style.display='flex';
+  let fs=48;const maxW=1500-86;
+  mc.font='700 '+fs+'px '+FONT;
+  const w=mc.measureText(t.toUpperCase()).width+t.length*fs*0.08;
+  if(w>maxW)fs=Math.max(22,Math.floor(fs*maxW/w));
+  $('tituloTxt').textContent=t;
+  tit.style.fontSize=fs+'px';
+  const dy=centrarV(t.toUpperCase(),fs,1);
+  tin.style.paddingTop=(14+dy).toFixed(1)+'px';tin.style.paddingBottom=(14-dy).toFixed(1)+'px';
+  tit.classList.remove('show');void tit.offsetWidth;tit.classList.add('show');
+}
+function prepararCartel(txt,color){
+  const c=$('cartel');
+  c.textContent=txt;
+  let fs=68;const maxW=1100-112;
+  const w=medir(txt.toUpperCase(),68);if(w>maxW)fs=Math.max(30,Math.floor(68*maxW/w));
+  c.style.fontSize=fs+'px';
+  const dy=centrarV(txt.toUpperCase(),fs,1.1);          // texto al centro exacto del marco
+  c.style.paddingTop=(14+dy).toFixed(1)+'px';c.style.paddingBottom=(14-dy).toFixed(1)+'px';
+  const nc=neon(color);
+  c.style.setProperty('--c',nc);
+  c.style.setProperty('--c1',hexA(nc,.95));
+  c.style.setProperty('--c2',hexA(nc,.6));
+  c.style.setProperty('--c3',hexA(nc,.3));
+}
+function confeti(){
+  const my=++confTok;
+  const cv=$('conf'),cx=cv.getContext('2d');
+  const cols=items.map(i=>i[1]).concat(['#ffffff','#e9c46a','#ffd9a0']);
+  const P=[];
+  for(let k=0;k<130;k++){
+    const izq=k%2===0;   // cañones a izquierda y derecha, hacia arriba y al centro
+    const v=620+Math.random()*620,dir=izq?(-Math.PI/2+0.35+Math.random()*0.5):(-Math.PI/2-0.35-Math.random()*0.5);
+    P.push({x:izq?560:1360,y:640+Math.random()*60,vx:Math.cos(dir)*v*0.9,vy:Math.sin(dir)*v,
+      r:Math.random()*6.3,vr:(Math.random()-.5)*14,w:8+Math.random()*9,h:5+Math.random()*7,c:cols[(Math.random()*cols.length)|0]});
+  }
+  let t0=ahora(),last=t0;
+  (function paso(){
+    const t=ahora(),dt=Math.min(0.05,t-last);last=t;
+    cx.clearRect(0,0,1920,1080);
+    const vida=t-t0;
+    P.forEach(p=>{
+      p.vy+=900*dt;p.vx*=Math.pow(0.35,dt);p.vy*=Math.pow(0.55,dt);
+      p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=p.vr*dt;
+      cx.save();cx.globalAlpha=Math.max(0,Math.min(1,(3.4-vida)/1.0));
+      cx.translate(p.x,p.y);cx.rotate(p.r);cx.scale(1,Math.cos(p.r*1.7)*0.8+0.2);
+      cx.fillStyle=p.c;cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cx.restore();
+    });
+    if(vida<3.4&&my===confTok)requestAnimationFrame(paso);
+    else cx.clearRect(0,0,1920,1080);
+  })();
+}
+
+/* =====================================================================
+   ESTADO DESDE PYTHON
+   ===================================================================== */
+function itemsRuleta(s){
+  const it=s.ruleta_items;
+  if(it&&it.length>=2&&it.length<=12)return it;
+  return[['A','#d60f0f'],['B','#f7f3ec']];
+}
+function pintar(s){
+  const its=itemsRuleta(s),ji=JSON.stringify(its);
+  if(ji!==lastItemsJSON){
+    lastItemsJSON=ji;
+    if(anim&&anim.raf){lastItemsJSON='';}   // en pleno giro: se reconstruye apenas termine
+    else{resetRueda();buildWheel(its);}
+  }
+  $('stage').classList.toggle('oculta',!s.ruleta_visible);
+  if(s.ruleta_vol_obs!==undefined){const v=Math.max(0,Math.min(1,+s.ruleta_vol_obs));if(!isNaN(v)&&au.volume!==v)au.volume=v;}   // volumen en vivo
+  if(s.ruleta_probar!==undefined){
+    if(lastProbar!==null&&s.ruleta_probar!==lastProbar&&s.ruleta_sonido_obs!==false){
+      try{au.pause();au.currentTime=0;const pr=au.play();if(pr&&pr.catch)pr.catch(()=>{});}catch(e){}
+    }
+    lastProbar=s.ruleta_probar;
+  }
+  if(s.ruleta_titulo!==undefined&&s.ruleta_titulo!==lastTitulo){lastTitulo=s.ruleta_titulo;ponerTitulo(s.ruleta_titulo);}
+  if(s.ruleta_stop!==undefined){if(lastStop!==null&&s.ruleta_stop!==lastStop){try{au.pause();}catch(e){}}lastStop=s.ruleta_stop;}
+  if(s.ruleta_giro===undefined)return;
+  if(lastGiro===null){                 // primera lectura tras abrir/recargar
+    lastGiro=s.ruleta_giro;
+    if(s.ruleta_giro>0){
+      const T=ahora()-(+s.ruleta_t0);
+      if(T<TL.TFIN&&T>-1){iniciarGiro(s);}else{restaurar(s);}
+    }
+    return;
+  }
+  if(s.ruleta_giro!==lastGiro){
+    lastGiro=s.ruleta_giro;
+    if(s.ruleta_visible)iniciarGiro(s);
+  }
+}
+async function leer(){
+  for(const u of URLS){
+    try{const r=await fetch(u,{cache:'no-store'});if(r.ok){pintar(await r.json());return;}}catch(e){}
+  }
+}
+
+dibujarFijo();
+setInterval(leer,70);leer();
+</script>
+</body>
+</html>
