@@ -467,6 +467,21 @@
      "r": "10.080",
      "nota": "7 × 24 × 60",
      "num": 10080
+    },
+    {
+     "id": "mate-6",
+     "q": "¿Cuántos segundos tarda la luz del Sol en llegar a la Tierra? (aproximado)",
+     "r": "Unos 500 segundos",
+     "nota": "8 min 20 s. Acepta entre 480 y 520.",
+     "seg": 60,
+     "num": 500
+    },
+    {
+     "id": "mate-7",
+     "q": "¿Cuántos días de clase tiene como mínimo el ciclo lectivo argentino según la ley?",
+     "r": "180",
+     "nota": "Ley 25.864. Dato extra: el Consejo Federal de Educación apunta a 190 días.",
+     "num": 180
     }
    ],
    "reservas": [
@@ -531,19 +546,6 @@
      "q": "Si 3 gatos cazan 3 ratones en 3 min, ¿cuántos gatos cazan 100 ratones en 100 min?",
      "r": "3 gatos",
      "seg": 60
-    },
-    {
-     "id": "r4-06",
-     "q": "¿Cuántos segundos tarda la luz del Sol en llegar a la Tierra? (aproximado)",
-     "r": "Unos 500 segundos",
-     "nota": "8 min 20 s. Acepta entre 480 y 520.",
-     "seg": 60
-    },
-    {
-     "id": "r4-08",
-     "q": "¿Cuántos días de clase tiene como mínimo el ciclo lectivo argentino según la ley?",
-     "r": "180",
-     "nota": "Ley 25.864. Dato extra: el Consejo Federal de Educación apunta a 190 días."
     }
    ],
    "reservas": [
@@ -563,8 +565,7 @@
      "r": "1.440",
      "seg": 60
     }
-   ],
-   "rebote": true
+   ]
   },
   {
    "id": "final",
