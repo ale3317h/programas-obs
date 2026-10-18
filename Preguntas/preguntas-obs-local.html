@@ -229,6 +229,7 @@ function pop(el,v){const t=String(v);if(el.textContent!==t){const nuevo=!el._see
 const TM={rest:20000,total:20000,corr:false,at:performance.now(),sec:-1,band:-1,tic:false};
 const tm=$('timer'),barra=$('barra');
 function frame(){
+  if(S&&S.fase==='titulo'){requestAnimationFrame(frame);return;}
   const now=performance.now();let r=TM.rest;if(TM.corr)r=Math.max(0,TM.rest-(now-TM.at));
   const pct=TM.total>0?Math.max(0,Math.min(1,r/TM.total)):1;
   barra.style.transform='scaleX('+pct+')';
@@ -276,17 +277,17 @@ function pintar(s){
     const a=$('av'),m=$('mid');a.classList.remove('on');void a.offsetWidth;a.classList.add('on');m.classList.add('aviso');clearTimeout(a._t);a._t=setTimeout(()=>{m.classList.remove('aviso');a.classList.remove('on');},3400);}
   avN=av.n;
   // ---- panel inferior
-  const f=s.fase,ini=f==='inicio',tv=(s.titulo_visible!==undefined?!!s.titulo_visible:!!(s.titulo&&s.titulo.trim()));
-  const mostrar=!ini||(tv&&!!s.titulo);                // titulo vacio: no se muestra nada
-  setCls(pan,'off',!mostrar);setCls(pan,'inicio',ini);setCls(pan,'jugando',!ini);
+  const f=s.fase,ini=f==='inicio',esTitulo=f==='titulo',tv=(s.titulo_visible!==undefined?!!s.titulo_visible:!!(s.titulo&&s.titulo.trim()));
+  const mostrar=(ini||esTitulo)?(tv&&!!s.titulo):true;                // titulo vacio: no se muestra nada
+  setCls(pan,'off',!mostrar);setCls(pan,'inicio',ini||esTitulo);setCls(pan,'jugando',!(ini||esTitulo));
   // llamada en curso: titulo titilea en amarillo y aviso visual
   const ll=!!(s&&s.llamada);setCls(tit,'llamada',ll);setCls($('ll-aviso'),'on',ll);
   if(ll){const eq=s.llamada_eq||'chicos';$('ll-eq').textContent=eq==='chicos'?'CHICOS':'CHICAS';$('ll-eq').style.color=eq==='chicos'?'#1E5BFF':'#ff2bb0';$('ll-aviso').style.setProperty('--tc',eq==='chicos'?'#1E5BFF':'#ff2bb0');}
-  const txt=ini?(s.titulo||''):(s.preg?s.preg.texto:''),key=(ini?'T':'Q'+s.qid)+'|'+txt+'|'+(s.cal&&s.cal.pan_h);
+  const txt=esTitulo?(s.titulo||''):(ini?(s.titulo||''):(s.preg?s.preg.texto:'')),key=(ini?'T':'Q'+s.qid)+'|'+txt+'|'+(s.cal&&s.cal.pan_h);
   if(key!==txtKey){const nuevoQ=txtKey.split('|')[0]!==key.split('|')[0];txtKey=key;tit.textContent=txt;tit.setAttribute('data-t',txt);
     if(ini)fit(tit,tw,150,40);else fit(tit,tw,58,26);
     if(nuevoQ&&txt){tit.classList.remove('animar');void tit.offsetWidth;tit.classList.add('animar');}}
-  const P=(ini||!s.preg)?null:s.preg,oc=s.ocultas||[],abierta=!!P&&(s.tipo==='abierta'||P.opciones.length===0),rev=f==='revelada';
+  const P=(esTitulo||ini||!s.preg)?null:s.preg,oc=s.ocultas||[],abierta=!!P&&(s.tipo==='abierta'||P.opciones.length===0),rev=f==='revelada';
   $('ops').style.display=(P&&!abierta)?'flex':'none';
   const opk=s.qid+'|'+f;const entrar=opk!==opKey&&f==='opciones';opKey=opk;
   ops.forEach((o,i)=>{
@@ -306,10 +307,11 @@ function pintar(s){
   if(s.resultado&&s.resultado!==prevRes){const fl=$('flash');fl.style.setProperty('--fc',s.resultado==='acierto'?'#22c55e':'#ef4444');fl.classList.remove('go');void fl.offsetWidth;fl.classList.add('go');}
   prevRes=s.resultado||null;
   // reloj (lo dibuja frame())
-  const T2=s.timer;TM.rest=T2.restante_ms!==undefined?T2.restante_ms:(T2.resto!==undefined?T2.resto*1000:T2.restante*1000);
-  TM.total=T2.total_ms!==undefined?T2.total_ms:T2.total*1000;TM.corr=!!T2.corriendo;TM.at=performance.now();
-  const rl=$('rl');setTxt(rl,T2.llamada?'LLAMADA A UN AMIGO':(T2.etiqueta||'TIEMPO'));setCls(rl,'ll',!!T2.llamada);
-}
+  if(f!=='titulo'){
+    const T2=s.timer;TM.rest=T2.restante_ms!==undefined?T2.restante_ms:(T2.resto!==undefined?T2.resto*1000:T2.restante*1000);
+    TM.total=T2.total_ms!==undefined?T2.total_ms:T2.total*1000;TM.corr=!!T2.corriendo;TM.at=performance.now();
+    const rl=$('rl');setTxt(rl,T2.llamada?'LLAMADA A UN AMIGO':(T2.etiqueta||'TIEMPO'));setCls(rl,'ll',!!T2.llamada);
+  }
 let busy=false;
 async function leer(){if(busy)return;busy=true;try{const r=await fetch(B+'/state',{cache:'no-store'});if(r.ok)pintar(await r.json());}catch(e){}busy=false;}
 setInterval(leer,200);leer();
