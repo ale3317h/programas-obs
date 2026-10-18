@@ -64,7 +64,7 @@ Juego de preguntas para dos equipos (**Chicos** vs **Chicas**) con marcador neó
 
 ## Detalles técnicos
 
-- Puerto: **8769** (Debate 8765, Ruleta/Juego 8766): puede estar abierto a la vez que todos.
+- Puerto: **8769** (Debate 8765, Ruleta 8766, Juego 8768): puede estar abierto a la vez que todos.
 - Endpoints: `/state` (JSON con todo el estado; **nunca** incluye respuesta/correcta antes de `revelada`), `/sonido/<n>`, `/img/<tarjeta>.png`, `/foto/<tema>.jpg`, `/overlay`, `/reglas`, `/comodines`, `/categorias`.
 - El reloj corre por hora real (`time.monotonic`): no se atrasa aunque la ventana se congele.
 - Duración del redoble medida del propio mp3 (Xing/VBR o CBR) para esperar lo justo antes de revelar.

@@ -1,5 +1,5 @@
 """
-JUEGO "¿ES IA O NO ES IA?" - Control para OBS (sin wifi, todo en 127.0.0.1:8766)
+JUEGO "¿ES IA O NO ES IA?" - Control para OBS (sin wifi, todo en 127.0.0.1:8768)
 1) Ejecutá este archivo (python juego_ia_control.py)
 2) OBS: Fuente > Navegador > "Archivo local" > juego-ia-obs-local.html (1920x1080)
 3) Sonidos: poné en la carpeta "sonidos_ia" => redoble.mp3 / acierto.mp3 / error.mp3
@@ -9,7 +9,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-PORT = 8766
+PORT = 8768
 BASE = os.path.dirname(os.path.abspath(__file__))
 SND = os.path.join(BASE, "sonidos_ia")
 os.makedirs(SND, exist_ok=True)

@@ -23,10 +23,8 @@ Suite de 4 programas de control en vivo para transmisiones por OBS Studio (event
 |---|---|---|---|
 | **Debate** | `Debate/` | 8765 | Placa inferior con título, subtítulo, logo y **cronómetro con barra neón** para debates (presentaciones, propuestas, réplicas, discursos). Presets por bloques, campana de box al llegar a 0:00, tic-tac. |
 | **Ruleta** | `Ruleta/` | 8766 | **Ruleta giratoria** que elige la dinámica o el invitado (sectores editables con colores). Giro + efecto de victoria sincronizados con un mp3 maestro. |
-| **Juego IA** | `Juego/` | 8766 ⚠️ | **"¿Es IA o no es IA?"** con 4 jugadores en cámaras: votan, se revela con redoble y se restan vidas. |
+| **Juego IA** | `Juego/` | 8768 | **"¿Es IA o no es IA?"** con 4 jugadores en cámaras: votan, se revela con redoble y se restan vidas. |
 | **Preguntas** | `Preguntas/` | 8769 | **"Chicos vs Chicas"**: juego de preguntas completo con 7 rondas, comodines, muerte súbita con rebote, redoble de tambores, marcador neón y elección de temas. Es el más desarrollado. |
-
-> ⚠️ **Juego y Ruleta usan el mismo puerto (8766):** no se pueden abrir los dos a la vez en el mismo momento.
 
 ## Requisitos
 

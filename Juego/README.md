@@ -5,7 +5,7 @@ Juego para 4 participantes (cámaras en las 4 esquinas de una pantalla central):
 ## Cómo usarlo
 
 1. Ejecutar: `python juego_ia_control.py`
-2. En OBS: Fuente → Navegador → "Archivo local" → `juego-ia-obs-local.html` (o `http://127.0.0.1:8766/overlay`), 1920×1080.
+2. En OBS: Fuente → Navegador → "Archivo local" → `juego-ia-obs-local.html` (o `http://127.0.0.1:8768/overlay`), 1920×1080.
 3. Flujo: elegir **nivel del video** (Fácil / Medio / Difícil / Muy difícil / Extremo) → el equipo vota (cámara por cámara: Es IA / No es IA / Sin voto) → **REVELAR** (redoble N segundos, configurable) → se marcan aciertos y fallas → **Siguiente video**.
 
 ## Qué tiene
@@ -28,7 +28,7 @@ Juego para 4 participantes (cámaras en las 4 esquinas de una pantalla central):
 
 ## Detalles técnicos
 
-- Puerto: **8766** (mismo que `Ruleta/`: **no se pueden usar los dos al mismo tiempo** en la misma PC).
+- Puerto: **8768** (reservado para este juego: Debate 8765, Ruleta 8766, Preguntas 8769; puede estar abierto a la vez que todos).
 - Endpoints: `/state` (JSON), `/sonido/<nombre>`, `/overlay`.
 - El overlay oculta la respuesta hasta la fase "revelado" (el motor filtra `resp` en `/state`).
 - Sin dependencias externas: `tkinter` + `http.server` + `winmm` (ctypes).
