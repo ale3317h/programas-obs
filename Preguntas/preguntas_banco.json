@@ -1,0 +1,651 @@
+{
+ "version": 2,
+ "titulo": "",
+ "rondas": [
+  {
+   "id": "r1",
+   "nombre": "Cultura general",
+   "color": "#38bdf8",
+   "tipo": "opciones",
+   "puntos": 1,
+   "seg": 20,
+   "comodines": [
+    "llamada",
+    "saltar",
+    "cambiar",
+    "5050"
+   ],
+   "orden": "alterno",
+   "preguntas": [
+    {
+     "id": "r1-01",
+     "q": "¿Cuál es la capital de Australia?",
+     "o": [
+      "Sídney",
+      "Melbourne",
+      "Canberra",
+      "Perth"
+     ],
+     "c": 2
+    },
+    {
+     "id": "r1-02",
+     "q": "¿Cuál es el elemento más abundante del universo?",
+     "o": [
+      "Oxígeno",
+      "Hidrógeno",
+      "Carbono",
+      "Helio"
+     ],
+     "c": 1
+    },
+    {
+     "id": "r1-03",
+     "q": "¿En qué año cayó el Muro de Berlín?",
+     "o": [
+      "1985",
+      "1987",
+      "1991",
+      "1989"
+     ],
+     "c": 3
+    },
+    {
+     "id": "r1-04",
+     "q": "¿Cuál es el hueso más largo del cuerpo humano?",
+     "o": [
+      "Fémur",
+      "Tibia",
+      "Húmero",
+      "Peroné"
+     ],
+     "c": 0
+    },
+    {
+     "id": "r1-05",
+     "q": "¿Cuál es el país más grande de África por superficie?",
+     "o": [
+      "Sudán",
+      "Argelia",
+      "RD del Congo",
+      "Libia"
+     ],
+     "c": 1
+    },
+    {
+     "id": "r1-06",
+     "q": "¿Cuál es el río más largo de Europa?",
+     "o": [
+      "Danubio",
+      "Rin",
+      "Sena",
+      "Volga"
+     ],
+     "c": 3
+    },
+    {
+     "id": "r1-07",
+     "q": "¿Qué planeta tiene más lunas confirmadas?",
+     "o": [
+      "Júpiter",
+      "Urano",
+      "Saturno",
+      "Neptuno"
+     ],
+     "c": 2
+    },
+    {
+     "id": "r1-08",
+     "q": "¿Quién fue la primera mujer en viajar al espacio?",
+     "o": [
+      "Sally Ride",
+      "Valentina Tereshkova",
+      "Svetlana Savítskaya",
+      "Mae Jemison"
+     ],
+     "c": 1
+    }
+   ],
+   "reservas": [
+    {
+     "id": "r1-R1",
+     "q": "¿Cuántos corazones tiene un pulpo?",
+     "o": [
+      "1",
+      "2",
+      "3",
+      "5"
+     ],
+     "c": 2
+    },
+    {
+     "id": "r1-R2",
+     "q": "¿Qué país tiene más islas en el mundo?",
+     "o": [
+      "Indonesia",
+      "Filipinas",
+      "Canadá",
+      "Suecia"
+     ],
+     "c": 3
+    }
+   ]
+  },
+  {
+   "id": "r2",
+   "nombre": "Territorio enemigo",
+   "color": "#a78bfa",
+   "tipo": "opciones",
+   "puntos": 2,
+   "seg": 20,
+   "comodines": [
+    "llamada",
+    "saltar",
+    "cambiar",
+    "5050"
+   ],
+   "orden": "alterno",
+   "preguntas": [
+    {
+     "id": "r2-01",
+     "q": "¿Cómo se llama el planeta natal de los saiyajin?",
+     "o": [
+      "Namek",
+      "Planeta Cold",
+      "Planeta Vegeta",
+      "Planeta Yardrat"
+     ],
+     "c": 2,
+     "equipo": "chicas"
+    },
+    {
+     "id": "r2-02",
+     "q": "¿Con qué tipo de luz se secan las uñas semipermanentes en los salones?",
+     "o": [
+      "Luz UV",
+      "Luz infrarroja",
+      "Luz blanca normal",
+      "Luz láser"
+     ],
+     "c": 0,
+     "equipo": "chicos"
+    },
+    {
+     "id": "r2-03",
+     "q": "¿Cómo se llama el padre de Goku?",
+     "o": [
+      "Bardock",
+      "Raditz",
+      "Nappa",
+      "Turles"
+     ],
+     "c": 0,
+     "equipo": "chicas"
+    },
+    {
+     "id": "r2-04",
+     "q": "¿Qué producto se usa para tapar ojeras e imperfecciones?",
+     "o": [
+      "Rubor",
+      "Iluminador",
+      "Contorno",
+      "Corrector"
+     ],
+     "c": 3,
+     "equipo": "chicos"
+    },
+    {
+     "id": "r2-05",
+     "q": "¿Quién derrota a Cell en los Juegos de Cell?",
+     "o": [
+      "Goku",
+      "Gohan",
+      "Vegeta",
+      "Piccolo"
+     ],
+     "c": 1,
+     "equipo": "chicas"
+    },
+    {
+     "id": "r2-06",
+     "q": "¿Qué técnica de maquillaje esculpe el rostro con luces y sombras?",
+     "o": [
+      "Strobing",
+      "Baking",
+      "Contouring",
+      "Draping"
+     ],
+     "c": 2,
+     "equipo": "chicos"
+    },
+    {
+     "id": "r2-07",
+     "q": "¿Cómo se llama el disco de energía cortante de Krilin?",
+     "o": [
+      "Masenko",
+      "Makankosappo",
+      "Taiyoken",
+      "Kienzan"
+     ],
+     "c": 3,
+     "equipo": "chicas"
+    },
+    {
+     "id": "r2-08",
+     "q": "¿Cómo se llama la manicura de punta blanca?",
+     "o": [
+      "Francesa",
+      "Rusa",
+      "Holográfica",
+      "Cat eye"
+     ],
+     "c": 0,
+     "equipo": "chicos"
+    }
+   ],
+   "reservas": [
+    {
+     "id": "r2-R1",
+     "q": "¿Cómo se llama la fusión de Goku y Vegeta con las Pothalas?",
+     "o": [
+      "Gogeta",
+      "Vegetto",
+      "Gotenks",
+      "Kefla"
+     ],
+     "c": 1,
+     "equipo": "chicas"
+    },
+    {
+     "id": "r2-R2",
+     "q": "¿Qué es un gloss?",
+     "o": [
+      "Brillo para los labios",
+      "Tinte líquido duradero",
+      "Lápiz para perfilar labios",
+      "Bálsamo para labios secos"
+     ],
+     "c": 0,
+     "equipo": "chicos"
+    }
+   ]
+  },
+  {
+   "id": "r3",
+   "nombre": "Elige tu tema",
+   "color": "#22d3ee",
+   "tipo": "abierta",
+   "puntos": 1,
+   "seg": 20,
+   "comodines": [
+    "llamada",
+    "saltar",
+    "cambiar"
+   ],
+   "orden": "por_tema",
+   "temas": [
+    {
+     "id": "minecraft",
+     "nombre": "Minecraft",
+     "color": "#22c55e",
+     "preguntas": [
+      {
+       "id": "r3-mc-1",
+       "q": "¿Cuántos bloques de base necesita un faro de 4 niveles?",
+       "r": "164",
+       "nota": "9 + 25 + 49 + 81 de pirámide. Contando el faro en sí son 165."
+      },
+      {
+       "id": "r3-mc-2",
+       "q": "¿Qué ingredientes lleva el Cristal del End?",
+       "r": "Vidrio, ojo de Ender, lágrima Ghast",
+       "nota": "Receta: 7 vidrios (todo el cuadro), 1 ojo de Ender al centro y 1 lágrima de Ghast abajo al medio."
+      },
+      {
+       "id": "r3-mc-3",
+       "q": "¿Cuántos ojos de Ender activan un portal al End vacío?",
+       "r": "12",
+       "nota": "El portal tiene 12 marcos."
+      },
+      {
+       "id": "r3-mc-4",
+       "q": "¿Cuántos puntos de vida tiene el Ender Dragon?",
+       "r": "200 puntos de vida",
+       "nota": "Equivale a 100 corazones."
+      }
+     ],
+     "reservas": [
+      {
+       "id": "r3-mc-R1",
+       "q": "¿Con qué dos ítems se craftea un ojo de Ender?",
+       "r": "Perla de Ender y polvo de Blaze"
+      },
+      {
+       "id": "r3-mc-R2",
+       "q": "¿Cuántos bloques de obsidiana hacen falta como mínimo para un portal al Nether?",
+       "r": "10",
+       "nota": "Marco de 4 de ancho por 5 de alto, sin las esquinas."
+      },
+      {
+       "id": "r3-mc-R3",
+       "q": "¿Qué lleva una mesa de encantamientos?",
+       "r": "2 diamantes, 4 obsidiana y 1 libro"
+      }
+     ]
+    },
+    {
+     "id": "cine",
+     "nombre": "Cine y series",
+     "color": "#f472b6",
+     "preguntas": [
+      {
+       "id": "r3-cine-1",
+       "q": "¿Cómo se llama el restaurante de pollo que Gus Fring usa como fachada en Breaking Bad?",
+       "r": "Los Pollos Hermanos"
+      },
+      {
+       "id": "r3-cine-2",
+       "q": "¿Qué canción de Kate Bush salva a Max en la cuarta temporada de Stranger Things?",
+       "r": "“Running Up That Hill”"
+      },
+      {
+       "id": "r3-cine-3",
+       "q": "¿Cómo se llama el prometido de Rose, la protagonista de Titanic?",
+       "r": "Cal Hockley"
+      },
+      {
+       "id": "r3-cine-4",
+       "q": "¿Cuál fue el primer largometraje totalmente animado por computadora (3D)?",
+       "r": "Toy Story (1995)",
+       "nota": "Es de Pixar y Disney. Técnicamente, el primer largometraje totalmente animado por computadora (CGI)."
+      }
+     ],
+     "reservas": [
+      {
+       "id": "r3-cine-res1",
+       "q": "¿Qué película se estrenó junto a Oppenheimer en 2023 y creó el “Barbenheimer”?",
+       "r": "Barbie"
+      },
+      {
+       "id": "r3-cine-res2",
+       "q": "¿Cuál es el verdadero nombre del abogado Saul Goodman en Breaking Bad?",
+       "r": "Jimmy McGill"
+      },
+      {
+       "id": "r3-cine-res3",
+       "q": "¿En qué ciudad ficticia de Indiana transcurre Stranger Things?",
+       "r": "Hawkins"
+      }
+     ]
+    },
+    {
+     "id": "cultura",
+     "nombre": "Cultura y arte",
+     "color": "#fbbf24",
+     "preguntas": [
+      {
+       "id": "r3-cultura-1",
+       "q": "¿Quién pintó La noche estrellada?",
+       "r": "Vincent van Gogh"
+      },
+      {
+       "id": "r3-cultura-lapices",
+       "q": "¿En qué ciudad ocurrió La Noche de los Lápices?",
+       "r": "La Plata",
+       "nota": "Fue el 16 de septiembre de 1976 (secuestro de estudiantes secundarios)."
+      },
+      {
+       "id": "r3-cultura-3",
+       "q": "¿Qué civilización construyó Machu Picchu?",
+       "r": "Los incas"
+      },
+      {
+       "id": "r3-cultura-beethoven",
+       "q": "¿Qué compositor, ya sordo, escribió la Novena Sinfonía?",
+       "r": "Ludwig van Beethoven"
+      }
+     ],
+     "reservas": [
+      {
+       "id": "r3-cultura-res-cien",
+       "q": "¿Quién escribió Cien años de soledad?",
+       "r": "Gabriel García Márquez"
+      },
+      {
+       "id": "r3-cultura-res-guernica",
+       "q": "¿Qué artista pintó el Guernica?",
+       "r": "Pablo Picasso"
+      },
+      {
+       "id": "r3-cultura-res3",
+       "q": "¿Quién escribió Don Quijote de la Mancha?",
+       "r": "Miguel de Cervantes"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "mate",
+   "nombre": "Matemáticas",
+   "color": "#38bdf8",
+   "tipo": "abierta",
+   "puntos": 1,
+   "seg": 40,
+   "comodines": [],
+   "orden": "alterno",
+   "responden": "ambos",
+   "aproximacion": true,
+   "preguntas": [
+    {
+     "id": "mate-1",
+     "q": "¿Cuánto es el 35% de 240?",
+     "r": "84",
+     "num": 84
+    },
+    {
+     "id": "mate-2",
+     "q": "¿Cuánto es 23 × 14?",
+     "r": "322",
+     "num": 322
+    },
+    {
+     "id": "mate-3",
+     "q": "Resuelve: 4x − 9 = x + 15. ¿Cuánto vale x?",
+     "r": "x = 8",
+     "num": 8
+    },
+    {
+     "id": "mate-4",
+     "q": "¿Cuánto da la suma de todos los números del 1 al 100?",
+     "r": "5050",
+     "num": 5050
+    },
+    {
+     "id": "mate-5",
+     "q": "¿Cuántos minutos tiene una semana?",
+     "r": "10.080",
+     "nota": "7 × 24 × 60",
+     "num": 10080
+    }
+   ],
+   "reservas": [
+    {
+     "id": "mate-R1",
+     "q": "¿Cuánto es 15² − 14²? (sin calculadora)",
+     "r": "29",
+     "nota": "Truco: (15 + 14) × (15 − 14).",
+     "num": 29
+    },
+    {
+     "id": "mate-R2",
+     "q": "¿Cuánto es 2 elevado a la 12?",
+     "r": "4096",
+     "num": 4096
+    },
+    {
+     "id": "mate-R3",
+     "q": "¿Cuánto es 18 × 15?",
+     "r": "270",
+     "num": 270
+    }
+   ]
+  },
+  {
+   "id": "r4",
+   "nombre": "Capciosas y lógica",
+   "color": "#fb923c",
+   "tipo": "abierta",
+   "puntos": 1,
+   "seg": 30,
+   "comodines": [
+    "llamada",
+    "saltar",
+    "cambiar"
+   ],
+   "orden": "alterno",
+   "preguntas": [
+    {
+     "id": "r4-01",
+     "q": "Un gallo pone un huevo en la punta de un techo: ¿hacia dónde cae?",
+     "r": "Ninguno, no ponen huevos"
+    },
+    {
+     "id": "r4-02",
+     "q": "¿Cuántos animales de cada especie llevó Moisés en el arca?",
+     "r": "Ninguno, fue Noé"
+    },
+    {
+     "id": "r4-03",
+     "q": "Con un solo fósforo, una vela, una lámpara y una chimenea, ¿qué enciendes primero?",
+     "r": "El fósforo"
+    },
+    {
+     "id": "r4-04",
+     "q": "Te dan 3 pastillas, una cada media hora. ¿Cuánto dura el tratamiento?",
+     "r": "1 hora",
+     "nota": "La primera se toma al inicio."
+    },
+    {
+     "id": "r4-05",
+     "q": "Si 3 gatos cazan 3 ratones en 3 min, ¿cuántos gatos cazan 100 ratones en 100 min?",
+     "r": "3 gatos",
+     "seg": 60
+    },
+    {
+     "id": "r4-06",
+     "q": "¿Cuántos segundos tarda la luz del Sol en llegar a la Tierra? (aproximado)",
+     "r": "Unos 500 segundos",
+     "nota": "8 min 20 s. Acepta entre 480 y 520.",
+     "seg": 60
+    },
+    {
+     "id": "r4-08",
+     "q": "¿Cuántos días de clase tiene como mínimo el ciclo lectivo argentino según la ley?",
+     "r": "180",
+     "nota": "Ley 25.864. Dato extra: el Consejo Federal de Educación apunta a 190 días."
+    }
+   ],
+   "reservas": [
+    {
+     "id": "r4-R1",
+     "q": "¿Qué es lo que mientras más le quitas, más grande se hace?",
+     "r": "Un hoyo"
+    },
+    {
+     "id": "r4-R2",
+     "q": "¿Cuántos meses tienen 28 días?",
+     "r": "Todos"
+    },
+    {
+     "id": "r4-R3",
+     "q": "¿Cuántos minutos tiene un día?",
+     "r": "1.440",
+     "seg": 60
+    }
+   ],
+   "rebote": true
+  },
+  {
+   "id": "final",
+   "nombre": "Gran final",
+   "color": "#f43f5e",
+   "tipo": "abierta",
+   "puntos": 2,
+   "seg": 10,
+   "comodines": [],
+   "orden": "alterno",
+   "preguntas": [
+    {
+     "id": "fin-1",
+     "q": "¿Cuál es el océano más pequeño del mundo?",
+     "r": "Ártico"
+    },
+    {
+     "id": "fin-2",
+     "q": "¿Cuál es la capital de Canadá?",
+     "r": "Ottawa"
+    },
+    {
+     "id": "fin-3sq",
+     "q": "¿Cómo se dice \"ardilla\" en inglés?",
+     "r": "Squirrel"
+    },
+    {
+     "id": "fin-4",
+     "q": "¿Cuánto es 1000 dividido entre 8?",
+     "r": "125"
+    },
+    {
+     "id": "fin-5",
+     "q": "¿Cuál es el único metal que es líquido a temperatura ambiente?",
+     "r": "Mercurio"
+    },
+    {
+     "id": "fin-6",
+     "q": "¿Cuál es el país más poblado del mundo actualmente?",
+     "r": "India",
+     "nota": "Verificar antes de grabar: el dato puede cambiar."
+    }
+   ],
+   "reservas": [],
+   "sigue_si_acierta": true,
+   "rebote": true
+  },
+  {
+   "id": "desempate",
+   "nombre": "Desempate",
+   "color": "#facc15",
+   "tipo": "abierta",
+   "puntos": 1,
+   "seg": 10,
+   "comodines": [],
+   "orden": "alterno",
+   "preguntas": [
+    {
+     "id": "des-1",
+     "q": "¿Cuántos lados tiene un dodecágono?",
+     "r": "12"
+    },
+    {
+     "id": "des-2",
+     "q": "¿Cuál es la capital de Turquía?",
+     "r": "Ankara"
+    },
+    {
+     "id": "des-3",
+     "q": "¿Cuánto es 13 × 13?",
+     "r": "169"
+    },
+    {
+     "id": "des-4",
+     "q": "Último recurso: nombra 5 países de África en 10 segundos.",
+     "r": "Gana el primero en completarlos",
+     "nota": "Gana el primero en completarlos.",
+     "especial": "lista"
+    }
+   ],
+   "reservas": []
+  }
+ ]
+}

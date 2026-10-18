@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Chicos VS Chicas - Reglas</title>
+<!--
+OVERLAY: REGLAS DEL JUEGO  (1920x1080, fondo transparente, sin cámaras)
+OBS: Fuente de navegador > "Archivo local" > este HTML, 1920x1080. Una escena aparte.
+Resaltar una regla (amarillo + zoom pequeño, nada más): lo manda el MOTOR (/state > panel.regla = 1..5 o null);
+a mano: clic derecho en la fuente > Interactuar > clic en la tarjeta, o teclas 1-5. Clic de nuevo o tecla 0 = quitar. Se recuerda entre aperturas. Prueba: ?hl=3
+-->
+<style>
+:root{--azul:#1E5BFF;--cian:#38bdf8;--rosa:#E6007E;--rosa2:#ff2bb0;--violeta:#a78bfa;--oro:#FFD400;
+  --titulo:"Montserrat","Segoe UI Black","Arial Black","Impact",sans-serif;--texto:"Segoe UI","Helvetica Neue",Arial,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;font-family:var(--texto);color:#fff;user-select:none}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+#vig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 46%,rgba(2,4,24,.50) 0%,rgba(2,4,24,.62) 55%,rgba(1,2,12,.82) 100%)}
+#cab{position:absolute;left:0;right:0;top:30px;text-align:center}
+#cab .sup{font:800 30px var(--titulo);letter-spacing:12px;text-shadow:0 0 14px currentColor}
+#cab .sup .a{color:var(--cian)}#cab .sup .v{color:#fff;margin:0 14px}#cab .sup .r{color:var(--rosa2)}
+#cab h1{margin:2px 0 0;font:900 100px/1.05 var(--titulo);letter-spacing:6px;text-transform:uppercase;color:#fff;
+  text-shadow:0 0 6px #fff,0 0 22px var(--t1),0 0 54px var(--t1),0 0 120px var(--t2)}
+#cab .barra{position:relative;width:700px;height:8px;margin:12px auto 0;border-radius:8px;overflow:hidden;
+  background:linear-gradient(90deg,var(--azul),var(--cian),var(--rosa2),var(--rosa));box-shadow:0 0 22px var(--cian),0 0 22px var(--rosa2)}
+#cab .barra::after{content:"";position:absolute;top:0;bottom:0;width:180px;left:-200px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);animation:brillo 3.2s ease-in-out infinite}
+@keyframes brillo{0%{transform:translateX(0)}60%,100%{transform:translateX(1000px)}}
+#root.on #cab{animation:bajar .7s cubic-bezier(.2,.9,.25,1.1) backwards}
+@keyframes bajar{from{opacity:0;transform:translateY(-50px)}to{opacity:1;transform:none}}
+.fila{position:absolute;left:0;right:0;display:flex;justify-content:center}
+.card{--c:#38bdf8;--cl:#bfe9ff;position:relative;isolation:isolate;border-radius:34px;border:4px solid var(--c);cursor:pointer;
+  background:linear-gradient(165deg,rgba(8,14,46,.90),rgba(3,4,18,.94));box-shadow:0 0 14px var(--c),inset 0 0 26px rgba(255,255,255,.04);
+  display:flex;flex-direction:column;align-items:center;transition:transform .35s cubic-bezier(.2,.9,.3,1.3),border-color .3s,box-shadow .3s}
+.card::before{content:"";position:absolute;inset:-12px;z-index:-1;border-radius:46px;background:var(--c);filter:blur(36px);opacity:.30;animation:resp 3.4s ease-in-out infinite;animation-delay:calc(var(--i,0)*-.7s);transition:background .3s}
+@keyframes resp{0%,100%{opacity:.22}50%{opacity:.52}}
+#root.on .card{animation:sube .75s cubic-bezier(.2,.9,.25,1.08) backwards;animation-delay:calc(var(--i,0)*110ms + 120ms)}
+@keyframes sube{from{opacity:0;transform:translateY(70px) scale(.9)}to{opacity:1;transform:none}}
+.neon{text-shadow:0 0 4px #fff,0 0 14px var(--c),0 0 34px var(--c)}
+/* RESALTADO: solo amarillo + zoom pequeno */
+.card.hl{--c:#FFD400;--cl:#fff2a0;transform:scale(1.06);z-index:5;box-shadow:0 0 18px var(--c),0 0 60px var(--c),inset 0 0 30px rgba(255,212,0,.12)}
+.card.hl::before{opacity:.65}
+.rx b,.cx b{color:var(--cl);text-shadow:0 0 12px var(--c)}
+
+#f{top:262px;gap:34px;padding-top:34px}
+.card{width:332px;height:742px;padding:0 6px}
+.num{position:absolute;top:-30px;left:22px;width:74px;height:74px;border-radius:50%;background:#02030c;border:4px solid var(--c);display:flex;align-items:center;justify-content:center;font:900 40px var(--titulo);box-shadow:0 0 18px var(--c);transition:border-color .3s,box-shadow .3s}
+.ico{margin-top:50px;width:176px;height:176px;color:var(--c);filter:drop-shadow(0 0 8px var(--c)) drop-shadow(0 0 22px var(--c));animation:flota 3.2s ease-in-out infinite;animation-delay:calc(var(--i,0)*-.5s);transition:color .3s}
+.ico svg{width:100%;height:100%}
+@keyframes flota{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.rt{margin-top:18px;font:900 46px/1.05 var(--titulo);text-transform:uppercase;text-align:center;padding:0 8px}
+.rx{margin-top:18px;margin-bottom:28px;flex:1;min-height:0;width:100%;overflow:hidden;font:600 36px/1.28 var(--texto);color:#eaf0ff;text-align:center;padding:0 20px}
+.card.hl{--c:#FFD400!important;--cl:#fff2a0!important}
+</style>
+</head>
+<body>
+<div id="stage"><div id="root">
+<div id="vig"></div>
+<div id="cab"><div class="sup"><span class="a">CHICOS</span><span class="v">VS</span><span class="r">CHICAS</span></div><h1 id="h1" style="--t1:#38bdf8;--t2:#1E5BFF">Reglas del juego</h1><div class="barra"></div></div>
+<div class="fila" id="f"></div>
+</div></div>
+<script>
+(function(){
+"use strict";
+
+var Q = new URLSearchParams(location.search);
+var BASE = "http://127.0.0.1:8769";
+var stage = document.getElementById("stage"), root = document.getElementById("root");
+function escalar(){var s=Math.min(innerWidth/1920,innerHeight/1080);stage.style.transform="translate("+((innerWidth-1920*s)/2)+"px,"+((innerHeight-1080*s)/2)+"px) scale("+s+")";}
+addEventListener("resize",escalar);escalar();
+function $(id){return document.getElementById(id);}
+function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;}
+function sinTildes(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");}
+function ajustar(e,max,min){var lo=min,hi=max,m=min;while(lo<=hi){var mid=(lo+hi)>>1;e.style.fontSize=mid+"px";
+  if(e.scrollHeight<=e.clientHeight+1&&e.scrollWidth<=e.clientWidth+1){m=mid;lo=mid+1;}else hi=mid-1;}e.style.fontSize=m+"px";}
+/* animación de entrada cada vez que la escena pasa a ser visible en OBS */
+function reentrar(){root.classList.remove("on");void root.offsetWidth;root.classList.add("on");}
+addEventListener("obsSourceVisibleChanged",function(e){if(e.detail&&e.detail.visible)reentrar();});
+root.classList.add("on");
+/* RESALTADO: clic (OBS: clic derecho en la fuente > Interactuar) o teclas 1..N; 0 o clic de nuevo = quitar. Se recuerda. */
+function resaltado(clave, cards){
+  var cur = -1;
+  try{ var v = localStorage.getItem(clave); if(v!==null) cur = parseInt(v,10); }catch(e){}
+  var h = Q.get("hl"); if(h!==null) cur = parseInt(h,10)-1;
+  function pintar(){ cards.forEach(function(c,i){ c.classList.toggle("hl", i===cur); }); }
+  function poner(i){ cur = (i===cur) ? -1 : i; try{localStorage.setItem(clave,String(cur));}catch(e){} pintar(); }
+  cards.forEach(function(c,i){ c.addEventListener("click",function(){poner(i);}); });
+  addEventListener("keydown",function(ev){
+    var n = parseInt(ev.key,10);
+    if(n===0){cur=-1;try{localStorage.setItem(clave,"-1");}catch(e){}pintar();}
+    else if(n>=1 && n<=cards.length) poner(n-1);
+  });
+  pintar();
+  return {set:function(i){cur=i;try{localStorage.setItem(clave,String(cur));}catch(e){}pintar();}};
+}
+
+var SV='viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"';
+var ICONOS={
+ turnos:'<svg '+SV+'><circle cx="60" cy="66" r="38"/><path d="M60 42v26l17 10"/><path d="M47 12h26M60 12v12"/><path d="M96 30l8-8"/></svg>',
+ puntos:'<svg '+SV+'><path d="M60 12l14 29 32 4-23 22 6 32-29-16-29 16 6-32-23-22 32-4z"/></svg>',
+ fallar:'<svg '+SV+'><circle cx="60" cy="60" r="44"/><path d="M42 42l36 36M78 42L42 78"/></svg>',
+ ayuda:'<svg '+SV+'><circle cx="60" cy="60" r="44"/><path d="M30 91L91 29"/><path d="M36 54a34 34 0 0 1 48 0M47 65a19 19 0 0 1 26 0"/><circle cx="60" cy="77" r="2.5" fill="currentColor"/></svg>',
+ comod:'<svg '+SV+'><circle cx="36" cy="36" r="21"/><circle cx="84" cy="36" r="21"/><circle cx="36" cy="84" r="21"/><circle cx="84" cy="84" r="21"/></svg>'};
+var REGLAS=[
+ {c:"#38bdf8",l:"#bfe9ff",ic:"turnos",t:"Turnos",x:"Se alternan. <b>20 s</b> por pregunta. Cuenta solo la respuesta final: <b>una sola voz</b>."},
+ {c:"#1E5BFF",l:"#9dbcff",ic:"puntos",t:"Puntos",x:"Acierto = <b>1 punto</b>. La Ronda 2 y la Final valen <b>2 puntos</b>."},
+ {c:"#a78bfa",l:"#ddd2ff",ic:"fallar",t:"Si fallan",x:"Si fallan o se quedan sin tiempo, se revela la respuesta y sigue la siguiente. <b>El otro equipo no responde esa</b>."},
+ {c:"#ff2bb0",l:"#ffb3e1",ic:"ayuda",t:"Sin ayuda",x:"Sin ayuda externa: <b>no hay hinchada ni internet</b>. La única ayuda son los comodines."},
+ {c:"#E6007E",l:"#ff9ccd",ic:"comod",t:"Comodines",x:"<b>4 por equipo</b>, uno de cada tipo, y solo <b>1 uso por pregunta</b>. No valen en la Final."}];
+var f=$("f"),cards=[];
+REGLAS.forEach(function(r,i){
+  var c=el("div","card");c.style.setProperty("--c",r.c);c.style.setProperty("--cl",r.l);c.style.setProperty("--i",i);
+  c.dataset.c=r.c;c.dataset.l=r.l;
+  c.innerHTML='<div class="num neon">'+(i+1)+'</div><div class="ico">'+ICONOS[r.ic]+'</div><div class="rt neon">'+r.t+'</div><div class="rx">'+r.x+'</div>';
+  f.appendChild(c);cards.push(c);
+});
+/* el color base vuelve al quitar el resaltado (el CSS .hl pisa --c con amarillo) */
+function ajustarTextos(){var n=document.querySelectorAll(".rx"),m=99,i;for(i=0;i<n.length;i++){ajustar(n[i],40,22);m=Math.min(m,parseInt(n[i].style.fontSize,10));}for(i=0;i<n.length;i++)n[i].style.fontSize=m+"px";}
+ajustarTextos();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(ajustarTextos);
+var R=resaltado("cvc_hl_reglas",cards),ultimo;
+/* MOTOR: /state > panel.regla = 1..5 (resalta esa) o null (ninguna). Si el motor no manda "regla", mandan el clic/teclas. */
+function aplicar(st){var p=st&&st.panel;if(!p||!Object.prototype.hasOwnProperty.call(p,"regla"))return;
+  var v=(p.regla===null||p.regla===undefined)?-1:(parseInt(p.regla,10)-1);if(v!==ultimo){ultimo=v;R.set(v);}}
+if(!Q.get("hl")){var pedir=function(){fetch(Q.get("state")||(BASE+"/state"),{cache:"no-store"}).then(function(r){return r.json();}).then(aplicar).catch(function(){});};setInterval(pedir,250);pedir();}
+
+})();
+</script>
+</body>
+</html>
