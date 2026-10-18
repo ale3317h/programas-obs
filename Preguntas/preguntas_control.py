@@ -641,7 +641,7 @@ class Motor:
             if self.revelando is not None: return False, "Se esta revelando la respuesta"
             if self.fase == "revelada": return False, "La pregunta ya esta revelada"
             self.fase = "opciones"; self._bump()
-            self.reloj_start()
+            if self.auto_inicio and not self.llamada: self.reloj_start()
             return True, ""
     def elegir(self, i):
         with LOCK:
