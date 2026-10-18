@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><title>¿Es IA o no es IA? - OBS local</title>
+<!-- OBS: Fuente Navegador > Archivo local > este archivo. 1920x1080, posicion 0,0. Fondo transparente.
+     Requiere juego_ia_control.py corriendo (127.0.0.1, sin wifi). -->
+<style>
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:transparent!important;font-family:'Segoe UI',Arial,sans-serif;}
+/* Colores de neon segun el nivel: l0 facil=verde, l1 medio=naranja, l2-l4 dificil y mas=rojo titilando */
+#root{position:absolute;inset:0;transition:opacity .3s;--c1:#22ff6a;--c2:#d1fae5;--c3:#16a34a;--c4:#4ade80;--ba:none;--ma:pulso 2.2s ease-in-out infinite}
+#root.off{opacity:0}
+#root.l1{--c1:#ff9f1a;--c2:#ffedd5;--c3:#ea580c;--c4:#fb923c}
+#root.l2,#root.l3,#root.l4{--c1:#ff2d2d;--c2:#fecaca;--c3:#b91c1c;--c4:#f87171}
+#root.l2{--ba:titila 1s ease-in-out infinite;--ma:titila 1s ease-in-out infinite}
+#root.l3{--ba:titila .6s ease-in-out infinite;--ma:titila .6s ease-in-out infinite}
+#root.l4{--ba:titila .32s ease-in-out infinite;--ma:titila .32s ease-in-out infinite}
+@keyframes titila{0%,100%{filter:brightness(1.4)}50%{filter:brightness(.4)}}
+@keyframes pulso{50%{filter:brightness(.7)}}
+@keyframes run{to{background-position:0 0,-300% 0}}
+@keyframes qpulse{50%{text-shadow:0 0 4px var(--c1),0 0 10px var(--c1),0 0 18px var(--c3)}}
+/* Marco de la pantalla central */
+#marco{position:absolute;left:358px;top:127px;width:1204px;height:681px;box-sizing:border-box;border:6px solid var(--c1);border-radius:6px;
+  box-shadow:0 0 10px var(--c1),0 0 28px var(--c3),0 0 60px var(--c3);animation:var(--ma);transition:border-color .4s}
+#marco.verde{border-color:#22ff6a;box-shadow:0 0 14px #22ff6a,0 0 40px #22ff6a,0 0 80px rgba(34,255,106,.7),inset 0 0 30px rgba(34,255,106,.45);animation:pulso 1s ease-in-out infinite}
+#marco.rojo{border-color:#ff2d2d;box-shadow:0 0 14px #ff2d2d,0 0 40px #ff2d2d,0 0 80px rgba(255,0,0,.7),inset 0 0 30px rgba(255,45,45,.45);animation:pulso 1s ease-in-out infinite}
+#marco.redoble{border-color:#fde047;box-shadow:0 0 14px #fde047,0 0 40px rgba(250,204,21,.8);animation:pulso .35s ease-in-out infinite}
+/* Barra de titulo */
+#tbar{position:absolute;left:560px;top:850px;width:800px;height:112px;border-radius:26px}
+#tbar::before{content:'';position:absolute;inset:-5px;border-radius:30px;z-index:0;
+  background:linear-gradient(90deg,var(--c1),var(--c2),var(--c3),var(--c4),var(--c1));background-size:300% 100%;
+  animation:corre 2.2s linear infinite,var(--ba);filter:drop-shadow(0 0 10px var(--c1)) drop-shadow(0 0 24px var(--c3))}
+@keyframes corre{to{background-position:-300% 0}}
+#tin{position:absolute;inset:0;border-radius:24px;background:linear-gradient(180deg,#0b1220,#000);z-index:1;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 16px var(--c3);transition:background .4s}
+#tt{font-size:68px;font-weight:900;color:#fff;text-shadow:0 0 10px var(--c1),0 0 26px var(--c3);letter-spacing:1px;white-space:nowrap}
+#tbar.verde::before{background:#22ff6a;animation:none;filter:drop-shadow(0 0 14px #22ff6a) drop-shadow(0 0 34px #22ff6a)}
+#tbar.verde #tin{background:linear-gradient(180deg,#052e16,#000);box-shadow:inset 0 0 26px rgba(34,255,106,.6)}
+#tbar.verde #tt{text-shadow:0 0 10px #22ff6a,0 0 28px #16a34a}
+#tbar.rojo::before{background:#ff2d2d;animation:none;filter:drop-shadow(0 0 14px #ff2d2d) drop-shadow(0 0 34px #ff0000)}
+#tbar.rojo #tin{background:linear-gradient(180deg,#450a0a,#000);box-shadow:inset 0 0 26px rgba(255,45,45,.6)}
+#tbar.rojo #tt{text-shadow:0 0 10px #ff2d2d,0 0 28px #dc2626}
+#tbar.redoble #tt{animation:parp .4s steps(2) infinite}@keyframes parp{50%{opacity:.35}}
+/* Nombres y tarjetas: negro con borde neon animado */
+.nom,.card{position:absolute;box-sizing:border-box;border:4px solid transparent;
+  background:linear-gradient(#000,#000) padding-box,linear-gradient(90deg,var(--c1),var(--c2),var(--c3),var(--c4),var(--c1)) border-box;background-size:100% 100%,300% 100%;
+  box-shadow:0 0 10px var(--c1),0 0 24px var(--c3);animation:run 2.4s linear infinite,var(--ba)}
+.nom{width:300px;height:80px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .3s}
+.nom b{font-size:36px;color:#fff;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1;text-shadow:0 0 8px var(--c1)}
+.nom i{font-style:normal;font-size:30px;letter-spacing:5px;line-height:1}
+.h1{color:#ff3b5c;text-shadow:0 0 8px #ff3b5c}.h0{color:#475569}
+.nom.muerto{opacity:.4;filter:grayscale(1);animation:none}
+.card{width:260px;height:70px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:56px;font-weight:900;color:var(--c2);
+  text-shadow:0 0 8px var(--c1),0 0 22px var(--c1),0 0 40px var(--c3);animation:run 2.4s linear infinite,qpulse 1.6s ease-in-out infinite,var(--ba)}
+.card.voto{font-size:40px;color:#fff;text-shadow:0 0 8px var(--c1),0 0 20px var(--c1);animation:run 2.4s linear infinite,var(--ba)}
+.card.ok,.card.mal{font-size:40px;color:#fff;text-shadow:none}
+.card.ok{background:#16a34a;border-color:#bbf7d0;box-shadow:0 0 22px #22ff6a,0 0 50px #22ff6a;animation:pop .5s}
+.card.mal{background:#dc2626;border-color:#fecaca;box-shadow:0 0 22px #ff2d2d,0 0 50px #ff2d2d;animation:shake .5s}
+@keyframes pop{50%{transform:scale(1.25)}}@keyframes shake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
+</style></head><body>
+<div id="root" class="l0">
+  <div id="marco"></div>
+  <div id="tbar"><div id="tin"><div id="tt">¿ES IA O NO ES IA?</div></div></div>
+</div>
+<script>
+const B='http://127.0.0.1:8766';
+const POS=[[62,88],[62,718],[1585,88],[1585,718]]; // x, y del cuadrado de camara
+const $=id=>document.getElementById(id), root=$('root'), els=[];
+POS.forEach(([x,y])=>{
+  const n=document.createElement('div');n.className='nom';n.style.left=(x-13)+'px';n.style.top=(y-61)+'px';n.innerHTML='<b></b><i></i>';
+  const c=document.createElement('div');c.className='card';c.style.left=(x+7)+'px';c.style.top=(y+276)+'px';c.textContent='?';
+  root.append(n,c);els.push({n,c});
+});
+const snd={redoble:new Audio(B+'/sonido/redoble'),acierto:new Audio(B+'/sonido/acierto'),error:new Audio(B+'/sonido/error')};
+Object.values(snd).forEach(a=>{a.preload='auto'});
+const last={};
+function play(k){const a=snd[k];try{a.currentTime=0;const p=a.play();p&&p.catch&&p.catch(()=>{});}catch(e){}}
+function pintar(s){
+  root.classList.toggle('off',!s.visible);
+  for(let k=0;k<5;k++) root.classList.toggle('l'+k,(s.nivel||0)===k);
+  ['redoble','acierto','error'].forEach(k=>{const v=s['p_'+k];
+    snd[k].volume=Math.max(0,Math.min(1,(s.vol&&s.vol[k]?s.vol[k].obs:100)/100));
+    if(last[k]!==undefined&&v!==last[k]) play(k); last[k]=v;});
+  const f=s.fase, tb=$('tbar'), mc=$('marco'), cal=s.cal||{};
+  mc.style.left=(358+(cal.mx||0))+'px'; mc.style.top=(127+(cal.my||0))+'px';
+  mc.style.width=(1204+(cal.mw||0))+'px'; mc.style.height=(681+(cal.mh||0))+'px'; tb.style.top=(850+(cal.ty||0))+'px';
+  tb.className=''; mc.className='';
+  if(f==='revelado'){const c=s.grupo==='ok'?'verde':s.grupo==='mal'?'rojo':''; if(c){tb.classList.add(c); mc.classList.add(c);}
+    $('tt').textContent=s.resp==='ia'?'¡ES IA!':'¡NO ES IA!';}
+  else if(f==='redoble'){tb.classList.add('redoble'); mc.classList.add('redoble'); $('tt').textContent=s.titulo;}
+  else{$('tt').textContent=s.titulo;}
+  s.jug.forEach((j,i)=>{
+    const {n,c}=els[i];
+    const nb=n.querySelector('b');nb.textContent=j.n;nb.style.fontSize=(j.n.length>12?26:j.n.length>9?31:36)+'px';
+    let h='';for(let k=0;k<s.vmax;k++)h+=`<span class="${k<j.v?'h1':'h0'}">♥</span>`;
+    n.querySelector('i').innerHTML=h; n.classList.toggle('muerto',j.v<=0);
+    c.className='card';
+    const t=j.vo==='ia'?'ES IA':'NO ES IA';
+    if(j.res==='ok'){c.classList.add('ok');c.textContent=t;}
+    else if(j.res==='mal'){c.classList.add('mal');c.textContent=t;}
+    else if(j.vo){c.classList.add('voto');c.textContent=t;}
+    else c.textContent='?';
+  });
+}
+async function leer(){try{const r=await fetch(B+'/state',{cache:'no-store'});if(r.ok)pintar(await r.json());}catch(e){}}
+setInterval(leer,250);leer();
+</script></body></html>
