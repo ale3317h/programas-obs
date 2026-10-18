@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Debate 2026 - Fuente local OBS (sin wifi)</title>
+<!--
+  PARA OBS (sin wifi / sin internet):
+  1) Dejá corriendo debate_control.py (usa 127.0.0.1 = interno de la PC, no usa wifi)
+  2) En OBS: Fuentes + > Navegador > marcar "Archivo local" > elegir ESTE archivo
+  3) Ancho 1920 Alto 1080. Fondo transparente automático.
+  Este archivo es 100% local, solo le pide datos al programa en la misma PC.
+-->
+<style>
+  html,body{margin:0;padding:0;background:transparent !important;width:1920px;height:1080px;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;}
+  #placa{
+    position:absolute;left:60px;bottom:50px;width:1800px;height:186px;overflow:hidden;box-sizing:border-box;
+    background:#000;
+    border:3px solid #38bdf8;border-radius:16px;
+    display:flex;align-items:center;padding:24px 28px 16px;gap:26px;
+    box-shadow:0 10px 40px rgba(0,0,0,.65),0 0 28px rgba(56,189,248,.4);
+    transition:opacity .3s, transform .3s;
+  }
+  #placa.oculta{opacity:0;transform:translateY(30px);}
+  #col-izq{flex-shrink:0;width:210px;height:64px;display:flex;align-items:center;justify-content:center;}
+  #logo{width:210px;height:64px;object-fit:contain;display:block;}
+  #contenido{flex:1;min-width:0;overflow:visible;display:flex;flex-direction:column;justify-content:center;}
+  #titulo{font-size:54px;font-weight:900;color:#fff;line-height:1.15;white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word;padding-bottom:8px;margin-bottom:-4px;}
+  #sub{font-size:27px;color:#dbeafe;font-weight:700;margin-top:2px;white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;word-break:break-word;line-height:1.25;padding-bottom:4px;}
+  #timer{font-size:86px;font-weight:900;font-variant-numeric:tabular-nums;color:#fff !important;background:#000;border-radius:14px;padding:0 20px;width:340px;flex-shrink:0;text-align:center;border:3px solid #f1f5f9;line-height:1.1;
+    box-shadow:0 0 8px rgba(255,255,255,.55),0 0 20px rgba(147,197,253,.35),inset 0 0 10px rgba(255,255,255,.12);
+    text-shadow:0 0 8px rgba(255,255,255,.8),0 0 20px rgba(147,197,253,.7),0 0 34px rgba(59,130,246,.5);}
+  #timer.amarillo{color:#fde047 !important;border-color:#facc15 !important;
+    box-shadow:0 0 7px rgba(250,204,21,.65),0 0 18px rgba(250,204,21,.4),0 0 34px rgba(250,204,21,.28),inset 0 0 10px rgba(250,204,21,.18) !important;
+    text-shadow:0 0 6px rgba(254,249,195,.85),0 0 16px rgba(250,204,21,.65),0 0 32px rgba(234,179,8,.45) !important;
+    animation:timerNeon 1.1s ease-in-out infinite !important;}
+  #timer.rojo{color:#f87171 !important;border-color:#ef4444 !important;
+    box-shadow:0 0 7px rgba(255,45,45,.7),0 0 18px rgba(255,45,45,.45),0 0 38px rgba(255,45,45,.3),inset 0 0 10px rgba(255,45,45,.2) !important;
+    text-shadow:0 0 6px rgba(255,150,150,.85),0 0 16px rgba(255,45,45,.65),0 0 32px rgba(255,0,0,.45) !important;
+    animation:timerNeon 1.1s ease-in-out infinite !important;}
+  @keyframes timerNeon{0%,100%{filter:brightness(1.15);}50%{filter:brightness(.92);}}
+  @keyframes blink{50%{opacity:.55}}
+  /* Barrita superior sincronizada NEON: blanca -> amarilla -> roja */
+  /* Track separado del borde para que no choque con la animación */
+  #barra-track{position:absolute;top:10px;left:16px;right:16px;height:9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:99px;z-index:4;overflow:visible;box-shadow:inset 0 1px 5px rgba(0,0,0,.9);}
+  #barra{position:absolute;top:0;left:0;height:100%;width:100%;min-width:0;background:#ffffff;border-radius:99px;transition:width 1s linear,background .3s;
+    box-shadow:0 0 6px #fff,0 0 14px rgba(255,255,255,.95),0 0 28px rgba(147,197,253,.9),0 0 55px rgba(59,130,246,.7);
+    animation:neonPulse 1.8s ease-in-out infinite;}
+  /* luz sutil que derrama la barrita sobre el negro: atada al ancho real de la barra */
+  #barra::before{content:'';position:absolute;top:100%;left:0;width:100%;height:12px;background:linear-gradient(180deg,rgba(255,255,255,.15),transparent);filter:blur(4px);pointer-events:none;}
+  #barra.amarilla::before{background:linear-gradient(180deg,rgba(250,204,21,.18),transparent);}
+  #barra.roja::before{background:linear-gradient(180deg,rgba(255,45,45,.25),transparent);}
+  #barra.amarilla{background:#fde047 !important;
+    box-shadow:0 0 6px #fef9c3,0 0 14px rgba(253,224,71,.95),0 0 28px rgba(250,204,21,.9),0 0 55px rgba(234,179,8,.7) !important;}
+  #barra.roja{background:#ff2d2d !important;min-width:0 !important;animation:neonRojo .8s ease-in-out infinite !important;}
+  #barra.vacia{opacity:0 !important;animation:none !important;}
+  @keyframes neonPulse{0%,100%{filter:brightness(1);}50%{filter:brightness(1.28);}}
+  @keyframes neonRojo{0%,100%{opacity:1;filter:brightness(1.2);box-shadow:0 0 8px #fecaca,0 0 18px #ff2d2d,0 0 38px rgba(255,45,45,.9),0 0 70px rgba(255,0,0,.7);}50%{opacity:.7;filter:brightness(.9);box-shadow:0 0 4px #ff2d2d,0 0 10px rgba(255,45,45,.7),0 0 22px rgba(255,0,0,.5);}}
+  .animar{animation:subirFade .55s ease;}
+  @keyframes subirFade{0%{opacity:0;transform:translateY(22px) scale(.98);}100%{opacity:1;transform:none;}}
+  .flash{animation:flashBorde .6s ease;}
+  @keyframes flashBorde{0%{box-shadow:0 0 0 6px #22c55e;}100%{box-shadow:0 10px 40px rgba(0,0,0,.65);}}
+</style>
+</head>
+<body>
+<div id="placa" class="oculta">
+  <div id="barra-track"><div id="barra"></div></div>
+  <div id="col-izq"><img id="logo" alt="logo"></div>
+  <div id="contenido"><div id="titulo">—</div><div id="sub">—</div></div>
+  <div id="timer">00:00</div>
+</div>
+<script>
+// OJO: este archivo se carga como "Archivo local" en OBS.
+// Los datos vienen de http://127.0.0.1:8765/state que es LA MISMA PC.
+// 127.0.0.1 NO usa wifi ni internet. Funciona con el wifi apagado.
+const URLS=['http://127.0.0.1:8765/state','http://localhost:8765/state'];
+const VERS='v8';
+const URL_CAMPANA='http://127.0.0.1:8765/sonido/campana';
+const URL_TICTAC='http://127.0.0.1:8765/sonido/tictac';
+const URL_INICIO='http://127.0.0.1:8765/sonido/inicio';
+const URL_PING='http://127.0.0.1:8765/ping';
+let lastRev=-1,lastTimer='',prevRest=null,lastDing=-1,lastCamp=-1,lastInicio=-1;
+const audioCampana=new Audio(URL_CAMPANA); audioCampana.preload='auto'; audioCampana.volume=1.0;
+const audioTic=new Audio(URL_TICTAC); audioTic.preload='auto'; audioTic.volume=1.0; audioTic.loop=true;
+const audioInicio=new Audio(URL_INICIO); audioInicio.preload='auto'; audioInicio.volume=1.0;
+const logoEl=document.getElementById('logo');
+const URL_LOGO='http://127.0.0.1:8765/logo';
+let logoFails=0;
+logoEl.onerror=()=>{ logoEl.style.display='none'; };
+logoEl.onload=()=>{ logoEl.style.display='block'; logoFails=0; };
+logoEl.src=URL_LOGO;
+let actx=null, ticBuf=null, ticSrc=null, ticCargando=false;
+function ctxAudio(){
+  try{
+    if(!actx){ const C=window.AudioContext||window.webkitAudioContext; if(!C) return null; actx=new C(); }
+    if(actx.state==='suspended'){ try{const r=actx.resume(); if(r&&r.catch)r.catch(()=>{});}catch(e){} }
+    return actx;
+  }catch(e){ return null; }
+}
+function asegurarTic(){
+  const c=ctxAudio(); if(!c||ticBuf||ticCargando) return;
+  ticCargando=true;
+  fetch(URL_TICTAC,{cache:'force-cache'}).then(r=>{ if(!r.ok) throw 0; return r.arrayBuffer(); })
+    .then(ab=>c.decodeAudioData(ab)).then(b=>{ ticBuf=b; ticCargando=false; })
+    .catch(()=>{ ticCargando=false; });
+}
+function ticStartWA(){
+  const c=ctxAudio(); if(!c||!ticBuf) return false;
+  try{
+    if(ticSrc) return true;
+    try{audioTic.pause();}catch(e){}
+    ticSrc=c.createBufferSource(); ticSrc.buffer=ticBuf; ticSrc.loop=true;
+    ticSrc.connect(c.destination); ticSrc.start(0); return true;
+  }catch(e){ return false; }
+}
+function ticStopWA(){
+  try{ if(ticSrc){ try{ticSrc.stop(0);}catch(e){} try{ticSrc.disconnect();}catch(e){} ticSrc=null; } }catch(e){}
+}
+asegurarTic();
+let audioBloqueado=true, campEstado='?', ticEstado='?';
+audioCampana.addEventListener('error', ()=>{ campEstado='error-carga'; try{ audioCampana.src=URL_CAMPANA+'?t='+Date.now(); audioCampana.load(); }catch(e){} });
+audioInicio.addEventListener('error', ()=>{ try{ audioInicio.src=URL_INICIO+'?t='+Date.now(); audioInicio.load(); }catch(e){} });
+function reintentarCampana(){
+  try{ const a=new Audio(URL_CAMPANA+'?t='+Date.now()); a.volume=1.0;
+    const p=a.play(); if(p&&p.then) p.then(()=>{ campEstado='ok-reintento'; }).catch(()=>{});
+  }catch(e){}
+}
+function desbloquearAudio(){
+  try{
+    ctxAudio();
+    asegurarTic();
+    [audioCampana, audioInicio, audioTic].forEach(a=>{
+      try{
+        a.muted=true;
+        const p=a.play();
+        if(p&&p.then)p.then(()=>{ try{a.pause();a.currentTime=0;}catch(e){} a.muted=false; audioBloqueado=false; }).catch(()=>{ try{a.pause();}catch(e){} a.muted=false; });
+        else { a.muted=false; audioBloqueado=false; }
+      }catch(e){ try{a.muted=false;}catch(_){} }
+    });
+  }catch(e){}
+}
+try{
+  ['pointerdown','keydown','touchstart','mousedown'].forEach(ev=>window.addEventListener(ev, desbloquearAudio, {passive:true}));
+  const _unlockTimer=setInterval(()=>{ if(!audioBloqueado){ try{clearInterval(_unlockTimer);}catch(e){} return; } desbloquearAudio(); }, 2000);
+}catch(e){}
+function sonarCampana(){
+  try{ ctxAudio(); }catch(e){}
+  try{
+    audioCampana.muted=false;
+    try{ audioCampana.currentTime=0; }catch(e){}
+    const p=audioCampana.play();
+    if(p&&p.then) p.then(()=>{ campEstado='ok'; }).catch(()=>{ campEstado='bloqueado'; reintentarCampana(); });
+    else campEstado='ok';
+  }catch(e){ campEstado='error'; reintentarCampana(); }
+}
+function sonarInicio(){
+  try{ ctxAudio(); }catch(e){}
+  try{
+    audioInicio.muted=false;
+    try{ audioInicio.currentTime=0; }catch(e){}
+    const p=audioInicio.play();
+    if(p&&p.catch) p.catch(()=>{ try{ const a=new Audio(URL_INICIO+'?t='+Date.now()); a.volume=1.0; const q=a.play(); if(q&&q.catch)q.catch(()=>{}); }catch(e){} });
+  }catch(e){}
+}
+function aplicarTic(on){
+  asegurarTic();
+  try{
+    if(on){
+      if(ticStartWA()){ ticEstado='ok'; return; }
+      if(audioTic.paused){ audioTic.muted=false; const p=audioTic.play(); if(p&&p.then)p.then(()=>{ticEstado='ok';}).catch(()=>{ticEstado='bloqueado';}); }
+      else ticEstado='ok';
+    } else { ticEstado='off'; ticStopWA(); try{audioTic.pause();}catch(e){} }
+  }catch(e){}
+}
+// Beacon: avisa al programa que el overlay esta vivo y si el audio esta bloqueado.
+setInterval(()=>{
+  try{ fetch(URL_PING,{method:'POST',headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({vers:VERS,bloqueado:audioBloqueado,camp:campEstado,tic:ticEstado})}).catch(()=>{}); }catch(e){}
+},2000);
+function pintar(s){
+  const nuevo=s.rev!==lastRev; lastRev=s.rev;
+  if(prevRest!==null && prevRest>0 && s.restante===0){ sonarCampana(); }
+  prevRest=s.restante;
+  if(s.ding!==undefined && s.ding!==lastDing){ if(lastDing!==-1){ sonarCampana(); } lastDing=s.ding; }
+  if(s.play_campana!==undefined && s.play_campana!==lastCamp){ if(lastCamp!==-1){ sonarCampana(); } lastCamp=s.play_campana; }
+  if(s.play_inicio!==undefined && s.play_inicio!==lastInicio){ if(lastInicio!==-1){ sonarInicio(); } lastInicio=s.play_inicio; }
+  const autoOK = s.tic_auto!==false;
+  // Con tilde: solo ultimos 10s. Sin tilde: siempre que el cronometro corre.
+  // A 0:00 siempre corta (ahi suena la campana), igual que en la app.
+  aplicarTic(s.restante>0 && (!!s.tic_on || (!!s.corriendo && (autoOK ? s.restante<=10 : true))));
+  document.getElementById('titulo').textContent=s.titulo||'';
+  document.getElementById('sub').textContent=s.sub||'';
+  if(logoEl.style.display==='none'){ if(++logoFails%20===0){ logoEl.src=URL_LOGO+'?t='+Date.now(); } }
+  const t=document.getElementById('timer');
+  const txt=String(Math.floor(s.restante/60)).padStart(2,'0')+':'+String(s.restante%60).padStart(2,'0');
+  if(txt!==lastTimer){t.textContent=txt;lastTimer=txt;}
+  const barra=document.getElementById('barra');
+  const pct=s.total?(s.restante/s.total):1;
+  /* timer sincronizado con la barrita: blanco -> amarillo -> rojo */
+  t.classList.remove('amarillo','rojo');
+  if(s.total&&pct<=0.25){ t.classList.add('rojo'); }
+  else if(s.total&&pct<=0.5){ t.classList.add('amarillo'); }
+  barra.style.width=(pct*100)+'%';
+  barra.classList.remove('amarilla','roja','vacia');
+  barra.style.boxShadow='';
+  if(pct<=0){
+    barra.classList.add('vacia');
+    barra.style.background='transparent';
+  }else if(!s.total||pct>0.5){
+    barra.style.background='#ffffff';
+  }else if(pct>0.25){
+    barra.classList.add('amarilla');
+    barra.style.background='#fde047';
+  }else{
+    barra.classList.add('roja');
+    barra.style.background='#ff2d2d';
+  }
+  document.getElementById('placa').classList.toggle('oculta',!s.visible);
+  if(nuevo){
+    const c=document.getElementById('contenido'),p=document.getElementById('placa');
+    c.classList.remove('animar');void c.offsetWidth;c.classList.add('animar');
+    p.classList.remove('flash');void p.offsetWidth;p.classList.add('flash');
+  }
+}
+async function leer(){
+  for(const u of URLS){
+    try{const r=await fetch(u,{cache:'no-store'});if(r.ok){pintar(await r.json());return;}}catch(e){}
+  }
+  // Sin mensaje: si no hay datos el overlay queda transparente.
+}
+setInterval(leer,250);leer();
+</script>
+</body>
+</html>
