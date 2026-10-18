@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Backups locales (versiones viejas manuales)
+*.bak
+*.bak.*
+*.tmp
+
+# Sistema
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Copias de seguridad manuales (no van al repo)
+Preguntas (copia)/
+Preguntas.zip
+
+# Configuración que cambia en vivo (queda fuera para no pisar la del repo)
+# (los .json de config SÍ se suben: son la configuración base del programa)
