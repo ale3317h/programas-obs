@@ -329,7 +329,6 @@ class Motor:
         self.puntos = {e: 0 for e, _, _ in EQUIPOS}
         self.progreso = {}                     # id de pregunta -> hecha / saltada / cambiada / usada
         self.titulo = ""; self.visible = True; self.turno = None      # titulo vacio es valido: no existe titulo por defecto
-        self._titulo_snapshot = None                                   # snapshot de la pregunta para "Volver al titulo" / "Volver a la pregunta"
         self.alternar = True; self.auto_inicio = False          # el reloj arranca con el boton "Iniciar tiempo"
         self.seg_ovr = {}                      # id de ronda -> segundos elegidos a mano (si no, manda "seg" de la ronda)
         self.ronda_i = 0; self.primera = True  # primera = todavia no se jugo ninguna pregunta de esta ronda
@@ -762,72 +761,8 @@ class Motor:
             if gana: return True, "Los dos acertaron exacto: suman los dos (%s)" % det
             return True, "Empate a la misma distancia: no suma nadie (%s). Podes marcar a mano." % det
     def cerrar(self):
-        """Volver al titulo (guarda la pregunta exacta) o Volver a la pregunta (restaura la pregunta tal como estaba)."""
         with LOCK:
-            if self.fase == "titulo":
-                if self._titulo_snapshot:
-                    self._restaurar_snapshot()
-                    self._bump(); return True, ""
-                return False, "No hay pregunta guardada para volver"
-            q = self._q()
-            if not q:
-                return False, "No hay pregunta cargada para llevar al titulo"
-            self._guardar_snapshot()
-            self.fase = "titulo"
-            self._fin_llamada(False)
-            self.reloj_pause()
-            self._bump(); return True, ""
-    def _guardar_snapshot(self):
-        """Guarda el estado actual de la pregunta para restaurarlo exactamente al volver del titulo."""
-        self._titulo_snapshot = {
-            "fase": self.fase,
-            "actual": self.actual,
-            "slot": self.slot,
-            "ocultas": list(self.ocultas),
-            "elegida": self.elegida,
-            "resultado": self.resultado,
-            "uso_q": self.uso_q,
-            "revelando": self.revelando,
-            "doble": self.doble,
-            "rebote": self.rebote,
-            "r_total": self.r_total,
-            "r_resto": self.r_resto,
-            "r_etiqueta": self.r_etiqueta,
-            "turno": self.turno,
-            "llamada": dict(self.llamada) if self.llamada else None,
-            "devolver": self.devolver,
-            "qid": self.qid,
-            "inicio_q": self.inicio_q,
-            "progreso_llamada": dict(self.progreso),
-        }
-    def _restaurar_snapshot(self):
-        """Restaura la pregunta exactamente como estaba antes de ir al titulo."""
-        s = self._titulo_snapshot
-        if not s: return
-        self.fase = s["fase"]
-        self.actual = s["actual"]
-        self.slot = s["slot"]
-        self.ocultas = list(s["ocultas"])
-        self.elegida = s["elegida"]
-        self.resultado = s["resultado"]
-        self.uso_q = s["uso_q"]
-        self.revelando = None            # el redoble ya sonó (o no) al irse al título: no se reanuda
-        self.doble = s["doble"]
-        self.rebote = s["rebote"]
-        self.r_total = s["r_total"]
-        self.r_resto = s["r_resto"]
-        self.r_etiqueta = s["r_etiqueta"]
-        self.turno = s["turno"]
-        self.llamada = dict(s["llamada"]) if s["llamada"] else None
-        self.devolver = s["devolver"]
-        self.qid = s["qid"]
-        self.inicio_q = s["inicio_q"]
-        self.progreso = dict(s["progreso_llamada"])
-        # recalcular el reloj desde cero para que no se expire mientras se estaba en el título
-        self.r_fin = None
-        if self.r_resto > 0:
-            self.r_fin = time.monotonic() + self.r_resto
-        self._titulo_snapshot = None
+            self._reset_pregunta(); self._bump(); return True, ""
     def recargar_banco(self):
         try: nuevo, avisos = cargar_banco()
         except ValueError as e: return False, str(e), []
@@ -1600,7 +1535,6 @@ class App:
             self._ll_vis = bool(m.llamada)
             if self._ll_vis: self.b_ll.pack(anchor="w", pady=(6, 0))
             else: self.b_ll.pack_forget()
-        self.b_volver.set(text="Volver a la pregunta" if self.m.fase == "titulo" else "Volver al título")
         for eq, l in self.lbl_p.items(): l.config(text=str(m.puntos[eq]))
         for eq, b in self.b_turno.items(): b.set(AZUL if m.turno == eq else PANEL2, "white")
         # comodines: libre / usado / no vale en esta ronda
