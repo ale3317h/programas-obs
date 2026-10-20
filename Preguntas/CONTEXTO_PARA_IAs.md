@@ -19,15 +19,21 @@ Todo lo de esta sesión pasó ahí, salvo temp scripts en `D:\Temp\opencode\`.
 - Causa: `preguntas-obs-local.html` solo conocía 6 sonidos; `redoble` faltaba en las 2 listas (líneas ~200 y ~247). El motor sí manda `p_redoble` y suena local por MCI.
 - Fix: agregado `'redoble'` a ambas listas. Tras el cambio hay que **recargar las fuentes de navegador en OBS**.
 
-## 3. Fondo negro de los X2 (A MEDIAS — terminar)
+## 3. Fondo negro de los X2 (HECHO — cerrado 20/10)
 - Problema: los X2 neón venían con fondo negro cuadrado opaco (alpha 255 en esquinas); los iconos viejos son transparentes fuera del círculo → en OBS se veía un cuadradote negro sobre las cámaras.
-- Hecho: se corrió `D:\Temp\opencode\fix_bg.py`: máscara circular (opaco hasta r=490, corte suave hasta r=507, igual huella que los iconos viejos cuyo recorte es ~0.495×1024) aplicada a las 2 activas + apagadas regeneradas desde las activas recortadas.
-- PENDIENTE: 1) verificar visualmente las 4 tarjetas, 2) actualizar los embeds `chicos_saltar`/`chicas_saltar` en `overlay-comodines.html` con las versiones recortadas (convertir a WebP lossless base64 como en §1), 3) borrar temp (`fix_bg.py`, `diag_bg.py`, `diag_ring.py`, `mask_debug.png` en `D:\Temp\opencode\`).
+- Hecho: se corrió `fix_bg.py`: máscara circular (opaco hasta r=490, corte suave hasta r=507) aplicada a las 2 activas + apagadas regeneradas desde las activas recortadas.
+- Cerrado (20/10, verificación numérica con Pillow): las 4 tarjetas tienen esquinas alpha 0, opaco adentro de r≈500, corte suave 505-512, transparente desde r=515 (misma huella que los iconos viejos). **Los embeds `chicos_saltar`/`chicas_saltar` de `overlay-comodines.html` YA eran las versiones recortadas**: cero diferencia de píxel en zona visible contra los PNG actuales (solo ruido RGB en píxeles transparentes). No hizo falta regenerar nada.
+- Los temp a borrar (`fix_bg.py`, `diag_bg.py`, `diag_ring.py`, `mask_debug.png` en `D:\Temp\opencode\`) no existen en esta máquina (D: no existe acá): nada que borrar.
 
-## 4. Guion del conductor (PENDIENTE)
-- El usuario quiere actualizar el guion con todos los cambios, resumido y sin relleno: el conductor debe saber **cuándo valen los comodines por ronda**, con avisos tipo "en la siguiente ronda no valen, úsenlos".
-- Cambios a reflejar: Saltar→Doble o nada (+3/−1), validez por ronda (leer `comodines` de cada ronda en `preguntas_banco.json`; 50/50 solo en opciones; Final sin comodines), redoble arreglado.
-- Pistas: existe `D:\Google Drive\Herramientas_OBS\Chicos_VS_Chicas_CONDUCTOR_sin_rebote.pdf`. No se encontró fuente `.docx` editable (buscar antes de regenerar; el usuario pegó el contenido del PDF en el chat).
+## 4. Guion del conductor (HECHO — cerrado 20/10)
+- `Guion_conductor_ACTUALIZADO.md` resincronizado contra `preguntas_banco.json` (banco del 18/10, posterior al guion del 16/10). Verificado: 68 preguntas banco ↔ guion, 0 faltantes.
+- Cambios reflejados:
+  - **REBOTE SOLO EN LA FINAL.** El banco del 18/10 ya no tiene `"rebote": true` en r4 → el guion decía "r4 con rebote" y quedó corregido (ficha, reglas, escaleta, §8, notas de producción). El motor obedece el campo del JSON (`ron["rebote"] = r.get("rebote") is True and ...`), así que r4 hoy NO rebota. ⚠️ Si el productor quiere que r4 rebote de nuevo: agregar `"rebote": true` a la ronda r4 del banco y avisar (el guion habría que revertir esa parte).
+  - "¿Cuántos segundos tarda la luz del Sol?" y "¿Cuántos días de clase mínimo?" **pasaron de r4 a Matemáticas** (mate tiene 7 preguntas, r4 quedó con 5); la de la luz del Sol tiene `seg: 60` (mate) y la de los gatos tiene `seg: 60` (r4) — anotado en el guion.
+  - Reserva r4 "¿Cuántos minutos tiene un día?" ya no existe en el banco → quitada del guion.
+  - **Avisos del conductor entre rondas** (pedido del productor): nueva sección en §2 con frases para cada transición ("última ronda con 50/50", "Matemáticas sin comodines, si les quedó alguno usenlo ahora o se pierde", "la final sin comodines y sin redoble").
+  - DOBLE O NADA (+3/−1, clave `saltar`), 50/50 solo en opciones (r1/r2), final sin comodines y sin redoble: ya estaban y siguen correctos.
+- Backup del guion previo: `C:\Users\hg\AppData\Local\Temp\opencode\Guion_conductor_ACTUALIZADO.md.bak`.
 
 ## Datos útiles
 - Sonidos en `sonidos/`: `redoble.wav` (+ `rufando-os-tambores.mp3` alternativo por CLAVES). OBS necesita "Controlar el audio mediante OBS" tildado.
