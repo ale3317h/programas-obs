@@ -3,6 +3,37 @@
 Cada versión tiene su **tag** y su **release** con el ZIP descargable del programa.
 La fuente de verdad del juego es `preguntas_banco.json`; el guion se genera/verifica contra el banco.
 
+## v1.2.0 — 20/10/2026 — Overlay visible siempre (URL base adaptativa)
+
+**El problema real de "no se ve el HTML en OBS":** el overlay tenía la dirección
+del motor **fija** (`const B='http://127.0.0.1:8769'`). Si OBS (o el navegador)
+abría la fuente desde otra dirección, el overlay se quedaba sin datos y no se
+veía nada. Por eso también "no tomaba los cambios".
+
+**Arreglo (una línea, mínima):** ahora usa el puerto/dirección desde la que se
+abrió, con 8769 de reserva:
+
+```js
+const B=(location.protocol==='http:'||location.protocol==='https:')
+        ?(location.origin||'http://127.0.0.1:8769'):'http://127.0.0.1:8769';
+```
+
+- No se tocó nada más del HTML (ni CSS, ni fases, ni estructura).
+- El HTML está en **UTF-16 con BOM** (ojo al editarlo: si se guarda en UTF-8
+  puede fallar). Se edita respetando la codificación.
+- **Probado con el motor real:** `http://127.0.0.1:8769/` carga el overlay
+  completo (título, aros, tarjetas de comodines, cartel, reloj), sin errores de
+  consola y sin pedidos fallidos. También probado el juego completo: r1, r2 (el
+  equipo lo manda la pregunta), r3 por temas, Matemáticas por aproximación,
+  comodines (doble o nada +3/−1, 50/50, llamada, cambiar con reserva) y el
+  **rebote de la final** (falla CHICOS → rebota a CHICAS con el reloj de nuevo).
+
+### Cómo lo tiene que abrir OBS
+
+- Fuente Navegador → **URL**: `http://127.0.0.1:8769/` (1920x1080).
+- Escenas informativas: `/reglas`, `/comodines`, `/categorias`.
+- **No** usar "Archivo local": OBS cachea el archivo y los cambios no se ven.
+
 ## v1.1.0 — 20/10/2026 — Contrato v4 + validador del banco
 
 - **`CONTRATO.md` reescrito a v4** (estaba en v2 y hablaba del "Saltar" viejo):
