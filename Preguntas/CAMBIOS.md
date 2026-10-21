@@ -3,6 +3,20 @@
 Cada versión tiene su **tag** y su **release** con el ZIP descargable del programa.
 La fuente de verdad del juego es `preguntas_banco.json`; el guion se genera/verifica contra el banco.
 
+## v1.2.1 — 20/10/2026 — Revertido el cambio de URL del overlay
+
+**Se volvió atrás el cambio de la v1.2.0.** En la prueba de OBS en la PC real
+el overlay **no se veía** con la URL adaptativa, así que se restauró el
+`preguntas-obs-local.html` **byte a byte** a como estaba antes (el que funciona,
+58544 bytes, hash `667239CB...`). La línea vuelve a ser:
+
+```js
+const B='http://127.0.0.1:8769';
+```
+
+- No se toca ningún otro archivo.
+- La v1.2.0 queda **sin efecto**: usar v1.2.1 (o la v1.1.0) para el HTML.
+
 ## v1.2.0 — 20/10/2026 — Overlay visible siempre (URL base adaptativa)
 
 **El problema real de "no se ve el HTML en OBS":** el overlay tenía la dirección
